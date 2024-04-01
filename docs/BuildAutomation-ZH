@@ -1,0 +1,59 @@
+
+                Xvisor build automation.
+
+关于验证你没有破坏Xvisor构建
+==================================================
+
+当你对Xvisor进行更改时,需要验证所提出的更改(即使你可能只针对单一平台进行了更改)没有破坏Xvisor支持的任何一个或多个平台/defconfig的构建。
+
+
+当你对Xvisor进行更改时，需要验证所提出的更改（即使你可能只针对单一平台进行了更改）没有破坏Xvisor支持的任何一个或多个平台/defconfig的构建。
+
+为了帮助你完成这项工作，tools/scripts/makeall目录中有一个shell脚本，可以为所有支持的defconfig文件和所有支持的架构构建Xvisor。由于大多数支持的架构需要某些交叉编译器，这个脚本会自动尝试在你的构建环境中找到可用的交叉编译器。根据你的环境中这些交叉编译器的可用性，脚本会告诉你它是否能够为所有支持的defconfigs构建Xvisor。
+
+现在，手动运行"makeall"脚本来验证你没有破坏任何东西可能感觉很繁琐，而且你的构建系统上可能没有安装所有必需的交叉编译器。幸运的是，这个步骤可以通过使用免费的"travis CI"服务来自动化。利用"travis CI"，你可以在一个标准化的环境中为所有支持的架构和defconfig自动构建Xvisor。
+
+一旦你在你的Xvisor GitHub仓库中设置了你的"travis CI"账户，你在GitHub仓库的任何分支上进行的任何"git push"操作都会触发"travis CI"上的构建。构建的失败或成功会通过电子邮件通知你。
+
+如何设置你的"travis CI"自动构建
+==============================================
+
+首先，你需要登录到"travis CI"。
+
+	https://travis-ci.org/
+
+你可以创建一个特定的账户，但推荐使用你的GitHub账户登录。这样，你的所有GitHub仓库都将在"travis CI"中可用。
+
+然后，你需要将你的GitHub Xvisor仓库添加到你的"travis CI"仪表板中。
+
+一旦你的Xvisor仓库被添加，你就可以自定义它的"设置"。特别是，你可以激活以下两个选项：
+	- 只有存在.travis.yml时才构建
+	- 构建推送
+
+接下来的步骤是在你的Xvisor仓库中添加一个.travis.yml文件。你可以将这个文件添加到你的主分支，但如果你想与上游Xvisor仓库保持同步，这可能不是最佳选择。
+
+因此，这个.travis.yml文件应该被添加到你的工作分支中。你需要在你的工作分支的Xvisor仓库的基目录中提交一个.travis.yml文件。该文件的典型内容如下所示:
+
+-----------------------------------------------------------------------------
+dist: trusty
+
+language: c
+
+compiler:
+  - gcc
+
+script: tools/scripts/makeall
+
+before_install:
+  - sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa -y
+  - sudo apt-get -q update
+  - sudo apt-get install -y gcc-arm-embedded
+  - sudo apt-get install -y gcc-aarch64-linux-gnu
+
+notifications:
+  email:
+    on_success: always
+    on_failure: always
+-----------------------------------------------------------------------------
+
+一旦你将带有此文件的提交推送到你的工作分支，"travis CI"将为所有架构和defconfigs构建Xvisor，并通过电子邮件通知你成功或失败。任何后续的"git push"操作在这个分支上也会触发"travis CI"上的构建。

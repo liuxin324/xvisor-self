@@ -3,3 +3,6 @@
 This directory contains souce code files that are common to all boards and
 arm64 processors.
 
+
+通用基础固件代码
+	该目录包含所有板通用的源代码文件ARM64 处理器。

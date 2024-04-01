@@ -1,0 +1,182 @@
+将Xvisor安装在Raspberry Pi4板（或BCM2838）上，使用SD卡引导
+
+本部分的自述文件说明了如何在实际的BCM2838 SOC板（例如Raspberry Pi4）上使用SD卡引导构建和运行Xvisor。
+
+默认情况下，Xvisor for BCM2838支持Virt-v8 guest，因此我们将展示如何使用Virt-v8 guest上的基本固件引导Linux。
+
+Raspberry Pi4通常附带一个SD卡，其中包含引导ARM处理器所需的GPU固件。
+
+要为Raspberry Pi4创建自己的SD卡引导，请下载并将预构建的raspbian映像写入SD卡，如下所述：https://www.raspberrypi.org/downloads/raspbian/
+
+接下来，我们将在Raspberry Pi4的SD卡上安装u-boot-2020.01，步骤如下：
+ 1) 下载并构建u-boot-2020.01
+ # export ARCH=arm64
+ # export CROSS_COMPILE=aarch64-none-linux-gnu-
+ # wget ftp://ftp.denx.de/pub/u-boot/u-boot-2020.01.tar.bz2
+ # cd u-boot-2020.01
+ # make rpi_4_defconfig
+ # make all
+ # cd ..
+ 2) 挂载预安装SD卡的引导分区
+ 3) 将u-boot.bin复制到 <raspi4_sd_card_boot_partition> 
+ 4) 如果不存在，创建 <raspi4_sd_card_boot_partition>/config.txt
+ 5) 将以下行添加到 <raspi4_sd_card_boot_partition>/config.txt:
+ enable_uart=1
+ kernel=u-boot.bin
+ gpu_mem=64
+ arm_64bit=1
+ 6) 卸载预安装SD卡的引导分区
+
+一旦我们在SD卡上安装了u-boot，我们将向SD卡的引导分区添加3个更多的映像:
+ 1) 与U-Boot兼容的Xvisor二进制文件（uvmm.bin）
+ 2) 用于Xvisor的DTB（bcm2838-rpi-4-b.dtb）
+ 3) 包含客户端二进制文件的与U-Boot兼容的Xvisor磁盘（udisk.img）
+
+以下是创建这些映像并在Raspberry Pi4上引导Xvisor的步骤：
+
+  [1.  创建环境]
+  # export CROSS_COMPILE=aarch64-none-linux-gnu-
+
+  --export CROSS_COMPILE=/usr/local/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-    
+
+  [2. 进入 Xvisor 源代码目录]
+  # cd <xvisor_source_directory>
+
+  [3. 使用通用v8默认设置配置 Xvisor]
+  # make ARCH=arm generic-v8-defconfig
+
+  [4. 构建 Xvisor 和 DTB]
+  # make
+
+  [5. 生成可用于 bootm 命令的 U-Boot 兼容的 uvmm.bin]
+  # mkimage -A arm64 -O linux -T kernel -C none -a 0x00080000 -e 0x00080000 -n Xvisor -d build/vmm.bin build/uvmm.bin
+
+  [6. 构建基本固件]
+  # make -C tests/arm64/virt-v8/basic
+
+  [7. 进入 Linux 源代码目录]
+  # cd <linux_source_directory>
+
+  [8. 在构建目录中配置 Linux]
+  # cp arch/arm64/configs/defconfig arch/arm64/configs/tmp-virt-v8_defconfig
+  # <xvisor_source_directory>/tests/common/scripts/update-linux-defconfig.sh -p arch/arm64/configs/tmp-virt-v8_defconfig -f <xvisor_source_directory>/tests/arm64/virt-v8/linux/linux_extra.config
+  # make O=<linux_build_directory> ARCH=arm64 tmp-virt-v8_defconfig
+
+  --/home/liu/Work/hypervisor/xvisor-self/tests/common/scripts/update-linux-defconfig.sh  -p arch/arm64/configs/tmp-virt-v8_defconfig -f /home/liu/Work/hypervisor/xvisor-self/tests/arm64/virt-v8/linux/linux_extra.config
+  --make O=/home/liu/Work/hypervisor/xvisor-guest/linux-rpi-5.17.y/build  ARCH=arm64 tmp-virt-v8_defconfig
+
+  [9. 在构建目录中构建 Linux]
+  # make O=<linux_build_directory> ARCH=arm64 Image dtbs
+
+  -- make O=/home/liu/Work/hypervisor/xvisor-guest/linux-4.20.y/build  ARCH=arm64 Image dtbs
+  
+  [10. 创建用作 Linux 内核根文件系统的 BusyBox RAMDISK]
+  (Note: For subsequent steps, we will assume that your RAMDISK is located at <busybox_rootfs_directory>/rootfs.img)
+  (Note: Please refer tests/common/busybox/README.md for creating rootfs.img using BusyBox)
+
+  [11. 进入 Xvisor 源代码目录]
+  # cd <xvisor_source_directory>
+
+  [12. 创建包含 Guest Linux 和 Guest 基本固件的 Xvisor 磁盘映像]
+  # mkdir -p ./build/disk/tmp
+  # mkdir -p ./build/disk/system
+  # cp -f ./docs/banner/roman.txt ./build/disk/system/banner.txt
+  # cp -f ./docs/logo/xvisor_logo_name.ppm ./build/disk/system/logo.ppm
+  # mkdir -p ./build/disk/images/arm64/virt-v8
+  # dtc -q -I dts -O dtb -o ./build/disk/images/arm64/virt-v8-guest.dtb ./tests/arm64/virt-v8/virt-v8-guest.dts
+  # cp -f ./build/tests/arm64/virt-v8/basic/firmware.bin ./build/disk/images/arm64/virt-v8/firmware.bin
+  # cp -f ./tests/arm64/virt-v8/linux/nor_flash.list ./build/disk/images/arm64/virt-v8/nor_flash.list
+  # cp -f ./tests/arm64/virt-v8/linux/cmdlist ./build/disk/images/arm64/virt-v8/cmdlist
+  # cp -f ./tests/arm64/virt-v8/xscript/one_novgic_guest_virt-v8.xscript ./build/disk/boot.xscript
+  # cp -f <linux_build_directory>/arch/arm64/boot/Image ./build/disk/images/arm64/virt-v8/Image
+  --cp -f /home/liu/Work/hypervisor/xvisor-guest/linux-rpi-5.17.y/build/arch/arm64/boot/Image ./build/disk/images/arm64/virt-v8/Image
+  # dtc -q -I dts -O dtb -o ./build/disk/images/arm64/virt-v8/virt-v8.dtb ./tests/arm64/virt-v8/linux/virt-v8.dts
+  # cp -f <busybox_rootfs_directory>/rootfs.img ./build/disk/images/arm64/virt-v8/rootfs.img
+  -- cp -f /home/liu/Work/hypervisor/xvisor-guest/busybox-1_33_1/rootfs.img ./build/disk/images/arm64/virt-v8/rootfs.img
+  # genext2fs -B 1024 -b 32768 -d ./build/disk ./build/disk.img
+  或者
+  [12. 仅使用 Guest 基本固件创建用于 Xvisor 的磁盘映像]
+  # mkdir -p ./build/disk/tmp
+  # mkdir -p ./build/disk/system
+  # cp -f ./docs/banner/roman.txt ./build/disk/system/banner.txt
+  # cp -f ./docs/logo/xvisor_logo_name.ppm ./build/disk/system/logo.ppm
+  # mkdir -p ./build/disk/images/arm64/virt-v8
+  # dtc -q -I dts -O dtb -o ./build/disk/images/arm64/virt-v8-guest.dtb ./tests/arm64/virt-v8/virt-v8-guest.dts
+  # cp -f ./build/tests/arm64/virt-v8/basic/firmware.bin ./build/disk/images/arm64/virt-v8/firmware.bin
+  # cp -f ./tests/arm64/virt-v8/linux/nor_flash.list ./build/disk/images/arm64/virt-v8/nor_flash.list
+  # cp -f ./tests/arm64/virt-v8/xscript/one_novgic_guest_virt-v8.xscript ./build/disk/boot.xscript
+  # genext2fs -B 1024 -b 32768 -d ./build/disk ./build/disk.img
+
+  [13. 为用于 bootm 命令的 U-Boot 创建兼容的 udisk.img]
+  # mkimage -A arm64 -O linux -T ramdisk -a 0x00000000 -n "Xvisor Ramdisk" -d build/disk.img build/udisk.img
+
+  [14. 将可引导的 SD 卡从 Raspberry Pi4 板上拔下，并将其连接到开发机]
+
+  [15. 挂载 SD 卡的数据分区（或分区 2）到开发机]
+
+  [16. 将 uvmm.bin、DTB 和 udisk.img 复制到 SD 卡的数据分区]
+  # cp -f build/uvmm.bin <path_to_mounted_data_partition_of_sd_card>
+  # cp -f build/arch/arm/dts/broadcom/bcm2838-rpi-4-b.dtb <path_to_mounted_data_partition_of_sd_card>
+  # cp -f build/udisk.img <path_to_mounted_data_partition_of_sd_card>
+
+  [17. 从开发机卸载 SD 卡的数据分区（或分区 2）]
+
+  [18. 将 SD 卡从开发机上拔下，重新插入 Raspberry Pi4 板]
+
+  [19. 使用 Putty 或 Minicom 连接到 Raspberry Pi4 板的串口]
+
+  [20. 上电或复位 Raspberry Pi4 板，并在 U-Boot 显示自动引导倒计时时按任意键]
+
+  [21. 从 U-Boot 命令行启用 MMC 接口]
+  U-Boot> mmc dev 0:1
+
+  [22. 从 SD 卡将 Xvisor 复制到 SDRAM]
+  U-Boot> fatload mmc 0:1 0x200000 uvmm.bin
+
+  [23. 从 SD 卡将 Xvisor DTB 复制到 SDRAM]
+  U-Boot> fatload mmc 0:1 0x800000 bcm2838-rpi-4-b.dtb
+
+  [24. 从 SD 卡将磁盘映像复制到 SDRAM]
+  U-Boot> fatload mmc 0:1 0x2000000 udisk.img
+
+  [25. 在禁用 MMU、中断等后跳转到 Xvisor]
+  U-Boot> bootm 0x200000 0x2000000 0x800000
+
+  (注意：如果要 "自动引导"，则需要在 SD 卡的根目录上创建一个 boot.scr 文件。为此，
+  编辑一个 boot.cmd 文本文件，并添加要自动执行的所有命令。例如，您可以将以下命令放入 "boot.cmd" 文件中：
+
+    mmc dev 0:0
+    ext4load mmc 0:1 0x200000 uvmm.bin
+    ext4load mmc 0:1 0x800000 bcm2838-rpi-4-b.dtb
+    ext4load mmc 0:1 0x2000000 udisk.img
+    bootm 0x200000 0x2000000 0x800000
+
+   您还可以使用以下命令创建 U-Boot boot.scr 文件：
+   mkimage -C none -A arm64 -T script -d boot.cmd boot.scr
+   将 boot.scr 文件放置在 SD 卡的引导分区中。）
+
+  [26. 激活 Guest0 以启动基本固件]
+  XVisor# guest kick guest0
+
+  [27. 绑定到虚拟 UART]
+  XVisor# vserial bind guest0/uart0
+
+  [28. 尝试基本固件的几个命令或进行下一步]
+  [guest0/uart0] basic# hi
+  [guest0/uart0] basic# hello
+  [guest0/uart0] basic# help
+
+  [29. 将 Linux 从 NOR flash 复制到 RAM 并开始从 RAM 引导 Linux]
+  [guest0/uart0] basic# autoexec
+  (注意："autoexec" 是一个快捷命令)
+  (注意：我们已将添加到 guest NOR flash 的 <xvisor_source_directory>/tests/arm64/virt-v8/linux/cmdlist 文件包含了一组从 NOR flash 引导 Linux 的命令)
+
+  [30. 等待 Linux 提示符出现，然后尝试一些命令]
+  [guest0/uart0] / # ls
+
+  [31. 输入字符序列 'ESCAPE+x+q" 返回到 Xvisor 提示符]
+  [guest0/uart0] / #
+
+  (注意：根据您的工作空间更改所有 <> 括号)
+  (注意：有关所需 ARM 主机的更多信息，请参阅 docs/arm/)
+  (注意：您可以根据您的工作空间自由更改上述步骤的顺序)

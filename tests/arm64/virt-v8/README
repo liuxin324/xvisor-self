@@ -1,9 +1,10 @@
 			Virt-v8 Guest
 
-The Virt-v8 is a fully para-virtualized guest with ARMv8 CPUs.
+The Virt-v8 is a fully para-virtualized guest with ARMv8 CPUs.(Virt-v8 是一个完全半虚拟化的客户端，使用 ARMv8 CPU。)
+
 
 We only have memory mapped VirtIO devices for IO and this makes the
-Guest as fully para-virtualized.
+Guest as fully para-virtualized.(我们仅有通过内存映射的 VirtIO 设备进行 IO，这使得客户端完全半虚拟化。)
 
 The memory map and irqs in Virt-v8 guest is as follows:
 0x0000000000000000-0x0000000007FFFFFF (128M)        (NOR Flash)
@@ -31,7 +32,7 @@ The memory map and irqs in Virt-v8 guest is as follows:
 
 In addition, we also have ARMv8 generic timer accessible to all VCPUs
 of the Guest with virtual timer irq 27 and physical timer irq 30.
-
+(另外，我们还为客户端的所有 VCPUs 提供了 ARMv8 通用计时器，虚拟计时器中断请求为 27，物理计时器中断请求为 30。)
 
 			Virt-v8 Guest OSes
 

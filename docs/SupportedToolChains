@@ -33,3 +33,31 @@ Our stand on toolchains is as follows:
    gcc.gnu.org or ARM Ltd or kernel.org without any c library.
 2. We will not entertain bugs or issues manifested by using a
    particular flavour or modified GCC
+
+---------------------------------------------------------------中文---------------------------------------------------------------
+
+Xvisor支持的交叉编译器工具链
+
+市面上有许多交叉编译器工具链，但我们不能保证它们都能与Xvisor代码兼容。
+
+因此，我们推荐使用ARM Ltd或kernel.org提供的交叉工具链作为参考。
+
+你可以在以下位置找到它们: 
+
+ARM Ltd的GNU工具链: https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-a/downloads
+kernel.org的交叉工具: https://www.kernel.org/pub/tools/crosstool/
+
+偏好ARM Ltd或kernel.org交叉工具链的原因是: 
+
+它们是使用crosstool编译的未经修改的开源GCC。
+kernel.org的工具链不包含libc，所以如果我们不小心包含了任何C库头文件，编译将会失败。ARM Ltd的工具链通常会附带开源的glibc。
+以上适用于编译Xvisor本身（或事实上的客户Linux内核）。
+
+为了构建RootFS用户空间镜像，你仍然需要一个基于glibc的交叉工具链。出于这个目的，你应该优先选择ARM Ltd工具链或一些开源工具链。你也可以使用专有工具链（如codesourcery），但我们不提供支持。
+
+请注意，我们不会限制用户使用他们喜欢的GCC版本来编译Xvisor。
+
+我们对工具链的立场如下: 
+
+使用gcc.gnu.org、ARM Ltd或kernel.org提供的原版GCC编译的Xvisor将始终可以编译并工作，而且不需要任何C库。
+我们不会处理由于使用特定版本或修改过的GCC而引发的bug或问题。

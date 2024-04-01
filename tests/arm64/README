@@ -7,3 +7,12 @@ This directory contains the following sub-directories:
 
 Please follow the README under specific directory for detailed
 steps to configure, compile and run.
+---------------------------------------------------------------中文---------------------------------------------------------------
+			       ARM64 客户
+
+此目录包含以下子目录：
+
+1. common - 所有 ARM64 客户的通用代码
+2. virt-v8 - Virt-v8 (ARMV8A) 客户目录
+
+请遵循特定目录下的 README 文件，了解配置、编译和运行的详细步骤。
