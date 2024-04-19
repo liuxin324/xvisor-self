@@ -816,6 +816,7 @@ void basic_exec(char *line)
 #define BASIC_MAX_CMD_STR_SIZE	256
 
 /* Works in user mode */
+/*跑这里了*/
 void basic_main(void)
 {
 	u64 tstamp;

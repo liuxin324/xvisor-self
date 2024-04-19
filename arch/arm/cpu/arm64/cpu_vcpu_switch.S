@@ -270,10 +270,10 @@ cpu_vcpu_ptrauth_regs_restore:
 	ret
 
 	.globl generic_timer_regs_save
-generic_timer_regs_save:
-	str	x1, [sp, #-8]!
-	mrs	x1, cntp_ctl_el0	/* cntpctl */
-	str	w1, [x0, #GENERIC_TIMER_CONTEXT_cntpctl]
+generic_timer_regs_save:  // 保存当前通用计时器的状态到一个事先定义的数据结构中
+	str	x1, [sp, #-8]!                 				/* 将寄存器x1的内容压栈，同时减小栈指针sp以备后续使用 */
+	mrs	x1, cntp_ctl_el0	/* cntpctl */ 			/* 读取物理计时器控制寄存器cntp_ctl_el0到x1 */
+	str	w1, [x0, #GENERIC_TIMER_CONTEXT_cntpctl] 	/*将x1的值存储到由x0指向的上下文结构中的cntpctl位置 */
 	mrs	x1, cntv_ctl_el0	/* cntvctl */
 	str	w1, [x0, #GENERIC_TIMER_CONTEXT_cntvctl]
 	mrs	x1, cntkctl_el1		/* cntkctl */
@@ -282,17 +282,17 @@ generic_timer_regs_save:
 	str	x1, [x0, #GENERIC_TIMER_CONTEXT_cntpcval]
 	mrs	x1, cntv_cval_el0	/* cntvcval */
 	str	x1, [x0, #GENERIC_TIMER_CONTEXT_cntvcval]
-	mov	x1, #GENERIC_TIMER_CTRL_IT_MASK
+	mov	x1, #GENERIC_TIMER_CTRL_IT_MASK   /*将用于禁用计时器的掩码加载到x1 */
 	msr	cntp_ctl_el0, x1	/* disable physical timer */
 	msr	cntv_ctl_el0, x1	/* disable virtual timer */
-	ldr	x1, [sp], #8
-	ret
+	ldr	x1, [sp], #8   		/* 从栈中恢复x1的原始值，并更新栈指针 */
+	ret                   	/* 返回到调用者 */
 
 	.globl generic_timer_regs_restore
-generic_timer_regs_restore:
-	str	x1, [sp, #-8]!
+generic_timer_regs_restore: // 从一个保存的数据结构中恢复通用计时器的状态
+	str	x1, [sp, #-8]!  			// 先将x1的当前值保存到栈中
 	ldr	x1, [x0, GENERIC_TIMER_CONTEXT_cntvoff]
-	msr	cntvoff_el2, x1		/* cntvoff */
+	msr	cntvoff_el2, x1		/* cntvoff */     /*	加载并恢复虚拟计时器偏移量寄存器cntvoff_el2 */
 	ldr	x1, [x0, #GENERIC_TIMER_CONTEXT_cntpcval]
 	msr	cntp_cval_el0, x1	/* cntpcval */
 	ldr	x1, [x0, #GENERIC_TIMER_CONTEXT_cntvcval]
@@ -303,5 +303,5 @@ generic_timer_regs_restore:
 	msr	cntp_ctl_el0, x1	/* cntpctl */
 	ldr	w1, [x0, #GENERIC_TIMER_CONTEXT_cntvctl]
 	msr	cntv_ctl_el0, x1	/* cntvctl */
-	ldr	x1, [sp], #8
+	ldr	x1, [sp], #8  /*恢复x1寄存器的原始值 */
 	ret

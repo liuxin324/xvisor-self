@@ -401,22 +401,28 @@ int vmm_manager_guest_vcpu_iterate(struct vmm_guest *guest,
 				   int (*iter)(struct vmm_vcpu *, void *),
 				   void *priv);
 
-/** Reset a Guest */
+/** Reset a Guest */ 
+/*重置指定的虚拟机*/
 int vmm_manager_guest_reset(struct vmm_guest *guest);
 
 /** Last Reset timestamp of a Guest */
+/*获取虚拟机最后一次重置的时间戳*/
 u64 vmm_manager_guest_reset_timestamp(struct vmm_guest *guest);
 
 /** Kick a Guest out of reset state */
+/*将虚拟机从重置状态中唤醒，使其开始执行*/
 int vmm_manager_guest_kick(struct vmm_guest *guest);
 
 /** Pause a Guest */
+/*暂停指定的虚拟机执行，虚拟机的状态将被保存，以便之后可以恢复执行*/
 int vmm_manager_guest_pause(struct vmm_guest *guest);
 
 /** Resume a Guest */
+/*复之前暂停的虚拟机的执行，虚拟机将从之前保存的状态继续执行*/
 int vmm_manager_guest_resume(struct vmm_guest *guest);
 
 /** Halt a Guest */
+/*停止指定的虚拟机执行，这通常意味着虚拟机将完全停止运行，并且其状态不会被保存*/
 int vmm_manager_guest_halt(struct vmm_guest *guest);
 
 /** Schedule request callback for a Guest

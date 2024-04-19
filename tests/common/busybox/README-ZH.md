@@ -1,20 +1,20 @@
 # BusyBox RootFS 用于 ARM/ARM64 客户端
 
 ## 引言
-[BusyBox](https://busybox.net) 提供了多个精简版的 Unix 工具集于一个可执行文件中。
+[BusyBox](https://busybox.net) 提供了多个精简版的 Unix 工具集于一个可执行文件中.
 它能够在多种 POSIX 环境中运行，例如 Linux、Android、FreeBSD 和其他环境，
-如专有内核，尽管它提供的许多工具都是为了与 Linux 内核提供的接口一起工作而设计的。
-它是为了资源非常有限的嵌入式操作系统而创建的。
-BusyBox 根据 GNU 通用公共许可协议的条款发布。
+如专有内核，尽管它提供的许多工具都是为了与 Linux 内核提供的接口一起工作而设计的.
+它是为了资源非常有限的嵌入式操作系统而创建的.
+BusyBox 根据 GNU 通用公共许可协议的条款发布.
 更多信息请阅读
 [BusyBox page on Wikipedia](http://en.wikipedia.org/wiki/BusyBox).
 
 
 ## 工具链
-用于编译 BusyBox rootfs 的工具链必须支持 C 库。
+用于编译 BusyBox rootfs 的工具链必须支持 C 库.
 目前，我们有两个可选项来自免费可用的工具链：
 1. [CodeSourcery Lite ARM GNU/Linux Toolchain](http://www.mentor.com/embedded-software/sourcery-tools/sourcery-codebench/editions/lite-edition/)
-    是针对 ARMv5te 或更高处理器的软浮点工具链。
+    是针对 ARMv5te 或更高处理器的软浮点工具链.
 
 交叉编译前缀为 `arm-none-linux-gnueabi- `
 它使用默认选项构建：`-mfloat-abi=soft` 和 `-march=armv5te`
@@ -33,12 +33,12 @@ BusyBox 根据 GNU 通用公共许可协议的条款发布。
         `-mfpu-name=vfpv3-d16` and `-march=armv7`.
 
 通常建议使用软浮点和 armv5te 工具链构建 BusyBox，
-以便所产生的根文件系统适用于 ARMv5、ARMv6 和 ARMv7 客户端。
+以便所产生的根文件系统适用于 ARMv5、ARMv6 和 ARMv7 客户端.
 
 在现实场景中，我们需要适用于 ARMv5 或更高处理器的硬浮点工具链，
-但这样的工具链不是免费可用的，我们需要使用交叉工具脚本手动构建。
+但这样的工具链不是免费可用的，我们需要使用交叉工具脚本手动构建.
 
-如果你只关心 ARMv7 和 ARMv8 处理器，应该使用 ARM Ltd 工具链。
+如果你只关心 ARMv7 和 ARMv8 处理器，应该使用 ARM Ltd 工具链.
 
 
 ## RAMDISK 生成
@@ -83,6 +83,7 @@ BusyBox 根据 GNU 通用公共许可协议的条款发布。
     ```bash
     cp tests/common/busybox/busybox-<busybox_version>_defconfig <busybox_source_directory>/.config
     --cp tests/common/busybox/busybox-1.33.1_defconfig /home/liu/Work/hypervisor/xvisor-guest/busybox-1_33_1/.config
+    --cp tests/common/busybox/busybox-1.33.1_defconfig /home/liu/Work/hypervisor/xvisor-guest/riscv/busybox-1_33_1/.config
     ```
 
 4. 进入 Busybox 源代码目录
@@ -125,6 +126,7 @@ BusyBox 根据 GNU 通用公共许可协议的条款发布。
     cp -f /home/liu/Work/hypervisor/xvisor-self/tests/common/busybox/logo_linux_clut224.ppm ./_install/etc/logo_linux_clut224.ppm
     cp -f /home/liu/Work/hypervisor/xvisor-self/tests/common/busybox/logo_linux_vga16.ppm ./_install/etc/logo_linux_vga16.ppm
     ---
+
 8. 使用以下选项之一创建 RootFS 镜像（首选 INITRAMFS）
 
     - INITRAMFS cpio image

@@ -102,6 +102,10 @@ int __init arch_cpu_final_init(void)
 	return VMM_OK;
 }
 
+/**
+ * @description: 汇编出来后的第一到达的地方
+ * @return {*}
+ */
 void __init cpu_init(void)
 {
 	/* Initialize VMM (APIs only available after this) */

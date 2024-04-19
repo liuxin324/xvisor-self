@@ -8,8 +8,8 @@ on Virt64 (paravirtualized RISC-V 64bit) Guest with Xvisor RISC-V 64bit running
 on QEMU virt machine (v8 or higher):
 
   [1. Build environment for Xvisor]
-  # CROSS_COMPILE=riscv64-unknown-linux-gnu-
-
+  # CROSS_COMPILE=riscv64-unknow-linux-gnu-
+    CROSS_COMPILE=/opt/riscv64/bin/riscv64-unknown-linux-gnu-
   [2. GoTo Xvisor source directory]
   # cd <xvisor_source_directory>
 
@@ -34,10 +34,12 @@ on QEMU virt machine (v8 or higher):
   [9. Configure Linux in build directory]
   # cp arch/riscv/configs/defconfig arch/riscv/configs/tmp-virt64_defconfig
   # <xvisor_source_directory>/tests/common/scripts/update-linux-defconfig.sh -p arch/riscv/configs/tmp-virt64_defconfig -f <xvisor_source_directory>/tests/riscv/virt64/linux/linux_extra.config
+    /home/liu/Work/hypervisor/xvisor-self/tests/common/scripts/update-linux-defconfig.sh -p arch/riscv/configs/tmp-virt64_defconfig -f /home/liu/Work/hypervisor/xvisor-self/tests/riscv/virt64/linux/linux_extra.config
   # make O=<linux_build_directory> ARCH=riscv tmp-virt64_defconfig
-
+    make O=/home/liu/Work/hypervisor/xvisor-guest/riscv/linux/build ARCH=riscv tmp-virt64_defconfig
   [10. Build Linux in build directory to reflect changes in kernel image]
   # make O=<linux_build_directory> ARCH=riscv Image dtbs
+    make O=/home/liu/Work/hypervisor/xvisor-guest/riscv/linux/build ARCH=riscv Image dtbs
 
   [11. Create BusyBox RAMDISK to be used as RootFS for Linux kernel]
   (Note: For subsequent steps, we will assume that your RAMDISK is located at <busybox_rootfs_directory>/rootfs.img)
@@ -58,12 +60,16 @@ on QEMU virt machine (v8 or higher):
   # cp -f ./tests/riscv/virt64/linux/cmdlist ./build/disk/images/riscv/virt64/cmdlist
   # cp -f ./tests/riscv/virt64/xscript/one_guest_virt64.xscript ./build/disk/boot.xscript
   # cp -f <linux_build_directory>/arch/riscv/boot/Image ./build/disk/images/riscv/virt64/Image
+    cp -f /home/liu/Work/hypervisor/xvisor-guest/riscv/linux/build/arch/riscv/boot/Image ./build/disk/images/riscv/virt64/Image
   # dtc -q -I dts -O dtb -o ./build/disk/images/riscv/virt64/virt64.dtb ./tests/riscv/virt64/linux/virt64.dts
   # cp -f <busybox_rootfs_directory>/rootfs.img ./build/disk/images/riscv/virt64/rootfs.img
+    cp -f /home/liu/Work/hypervisor/xvisor-guest/riscv/busybox-1_33_1/rootfs.img ./build/disk/images/riscv/virt64/rootfs.img
   # genext2fs -B 1024 -b 32768 -d ./build/disk ./build/disk.img
 
   [14. Launch QEMU]
   # qemu-system-riscv64 -M virt -m 512M -nographic -bios <opensbi_source_directory>/build/platform/generic/firmware/fw_jump.bin -kernel ./build/vmm.bin -initrd ./build/disk.img -append 'vmm.bootcmd="vfs mount initrd /;vfs run /boot.xscript;vfs cat /system/banner.txt"'
+
+qemu-system-riscv64 -M virt -m 512M -nographic -s -S -bios /home/liu/Work/hypervisor/xvisor-guest/riscv/opensbi/build/platform/generic/firmware/fw_jump.bin -kernel ./build/vmm.bin -initrd ./build/disk.img -append 'vmm.bootcmd="vfs mount initrd /;vfs run /boot.xscript;vfs cat /system/banner.txt"'
 
   [15. Kick Guest0 to start Basic Firmware]
   XVisor# guest kick guest0

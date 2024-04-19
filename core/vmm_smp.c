@@ -66,7 +66,7 @@ u32 vmm_smp_bootcpu_id(void)
 
 void vmm_smp_set_bootcpu(void)
 {
-	u32 cpu = vmm_smp_processor_id();
+	u32 cpu = vmm_smp_processor_id();// 等于0
 
 	if ((smp_bootcpu_id == UINT_MAX) &&
 	    (cpu < CONFIG_CPU_COUNT)) {

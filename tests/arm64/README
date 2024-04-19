@@ -15,4 +15,4 @@ steps to configure, compile and run.
 1. common - 所有 ARM64 客户的通用代码
 2. virt-v8 - Virt-v8 (ARMV8A) 客户目录
 
-请遵循特定目录下的 README 文件，了解配置、编译和运行的详细步骤。
+请遵循特定目录下的 README 文件，了解配置、编译和运行的详细步骤.

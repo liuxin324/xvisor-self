@@ -25,24 +25,24 @@ x86/
 	- x86 architecture support documentation.
 
 ---------------------------------------------------------------中文---------------------------------------------------------------
-以下是 ./xvisor/docs 中所有文件的简要列表及其包含的内容。如果你在 ./xvisor/docs 下添加了文档文件/目录，请按字母顺序在这里列出。请尝试保持描述简短，以便适合一行显示。
+以下是 ./xvisor/docs 中所有文件的简要列表及其包含的内容.如果你在 ./xvisor/docs 下添加了文档文件/目录，请按字母顺序在这里列出.请尝试保持描述简短，以便适合一行显示.
 
 
 00-INDEX
-	- 本文件。
+	- 本文件.
 releases/
-	- 每个版本的详细信息。
+	- 每个版本的详细信息.
 DesignDoc
-	- Xvisor 设计概览。
+	- Xvisor 设计概览.
 VersionScheme
-	- 关于 Xvisor 版本方案的解释。
+	- 关于 Xvisor 版本方案的解释.
 CodingStyle
-	- Xvisor 中期望的 C 编程风格。
+	- Xvisor 中期望的 C 编程风格.
 DriverPorting
-	- 推荐从 Linux 到 Xvisor 的驱动移植。
+	- 推荐从 Linux 到 Xvisor 的驱动移植.
 arm/
-	- ARM 架构支持文档。
+	- ARM 架构支持文档.
 riscv/
-	- RISC-V 架构支持文档。
+	- RISC-V 架构支持文档.
 x86/
-	- x86 架构支持文档。
+	- x86 架构支持文档.

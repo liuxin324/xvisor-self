@@ -479,100 +479,100 @@ Xvisor 中用于管理后台线程的框架称为 Hypervisor 线程.Xvisor 中�
   1. Name: 分配给此线程的名称.
   2. Function: 线程入口函数指针.
   3. Data: 作为参数传递给线程入口函数的任意数据的 void 指针.
-  4. Priority: 线程（或底层孤儿 VCPU）的优先级。数值越高，优先级越高.
+  4. Priority: 线程（或底层孤儿 VCPU）的优先级.数值越高，优先级越高.
   5. Time Slice:一旦线程（或底层孤儿 VCPU）被调度，它必须获得的最小时间量（以纳秒为单位）.
 
-我们不需要为每个线程显式创建堆栈，因为 hypervisor 管理器会在 VCPU 创建时自动为每个孤儿 VCPU（即线程）创建固定大小的堆栈。
-所有线程的默认堆栈大小可以在编译时通过 Xvisor menuconfig 选项更改。
+我们不需要为每个线程显式创建堆栈，因为 hypervisor 管理器会在 VCPU 创建时自动为每个孤儿 VCPU（即线程）创建固定大小的堆栈.
+所有线程的默认堆栈大小可以在编译时通过 Xvisor menuconfig 选项更改.
 
-线程 ID、优先级和时间片与底层孤儿 VCPU 的 ID、优先级和时间片相同。
+线程 ID、优先级和时间片与底层孤儿 VCPU 的 ID、优先级和时间片相同.
 
 线程在任何时间点都可以处于以下状态之一: 
 
-* 已创建（CREATED）: 线程刚刚创建，还未运行。
-* 运行中（RUNNING）: 线程正在运行。
-* 睡眠中（SLEEPING）: 线程正在等待队列中睡眠。
-* 已停止（STOPPED）: 线程已停止。它要么被强制停止，要么已完成其任务。
-（注: 孤儿 VCPU 状态可以直接映射到线程状态之一，因此要获取当前线程状态，我们查看底层孤儿 VCPU 的状态。）
+* 已创建（CREATED）: 线程刚刚创建，还未运行.
+* 运行中（RUNNING）: 线程正在运行.
+* 睡眠中（SLEEPING）: 线程正在等待队列中睡眠.
+* 已停止（STOPPED）: 线程已停止.它要么被强制停止，要么已完成其任务.
+（注: 孤儿 VCPU 状态可以直接映射到线程状态之一，因此要获取当前线程状态，我们查看底层孤儿 VCPU 的状态.）
 
 对于线程间同步，我们有以下同步原语: 
 
-  1. Spinlocks(自旋锁): 通常用于较小的临界区，以及 IRQ 上下文、普通上下文和孤儿上下文之间的同步。
-  2. Completion: 当线程（或孤儿 VCPU）希望等待某个事件（例如，来自宿主设备的中断）发生时通常使用。
-  3. Semaphore(信号量): 传统的信号量锁，允许线程（或孤儿 VCPU）在锁（或资源）不可用时睡眠。
-  4. Mutex(互斥锁): 传统的互斥锁，允许线程（或孤儿 VCPU）在锁不可用时睡眠。
+  1. Spinlocks(自旋锁): 通常用于较小的临界区，以及 IRQ 上下文、普通上下文和孤儿上下文之间的同步.
+  2. Completion: 当线程（或孤儿 VCPU）希望等待某个事件（例如，来自宿主设备的中断）发生时通常使用.
+  3. Semaphore(信号量): 传统的信号量锁，允许线程（或孤儿 VCPU）在锁（或资源）不可用时睡眠.
+  4. Mutex(互斥锁): 传统的互斥锁，允许线程（或孤儿 VCPU）在锁不可用时睡眠.
 
-上述完成、信号量和互斥锁使用 Xvisor 等待队列来睡眠。只有线程（或孤儿 VCPU）可以在等待队列中睡眠，因为我们不能在 IRQ 和普通上下文中睡眠。
-因此，只能在孤儿上下文中进行对完成、信号量和互斥锁的可睡眠操作。
+上述完成、信号量和互斥锁使用 Xvisor 等待队列来睡眠.只有线程（或孤儿 VCPU）可以在等待队列中睡眠，因为我们不能在 IRQ 和普通上下文中睡眠.
+因此，只能在孤儿上下文中进行对完成、信号量和互斥锁的可睡眠操作.
 
 ## 第8章: 设备驱动框架
 
-Xvisor 的设备驱动框架与 Linux 内核设备驱动模型在抽象和可用 API 方面非常相似。
-与 Linux 设备驱动模型的相似性帮助 Xvisor 提供 Linux 兼容头文件以便设备驱动移植。
-我们还有类似 Linux 的设备资源管理 API，Xvisor 使用它们来跟踪各种设备驱动使用的宿主资源。
+Xvisor 的设备驱动框架与 Linux 内核设备驱动模型在抽象和可用 API 方面非常相似.
+与 Linux 设备驱动模型的相似性帮助 Xvisor 提供 Linux 兼容头文件以便设备驱动移植.
+我们还有类似 Linux 的设备资源管理 API，Xvisor 使用它们来跟踪各种设备驱动使用的宿主资源.
 
 框架定义了以下实体: 
 
 vmm_bus
-逻辑上代表一个总线，多个设备可以存在于这个总线上。
-例如，平台（platform）、USB、SPI、I2C 等。
+逻辑上代表一个总线，多个设备可以存在于这个总线上.
+例如，平台（platform）、USB、SPI、I2C 等.
 
 vmm_class
-逻辑上代表由一组设备实现的功能类（CLASS）。
-例如，vmm_chardev（字符设备）、vmm_blockdev（块设备）、vmm_netport（网络端口）、vmm_netswitch（网络交换机）等。
+逻辑上代表由一组设备实现的功能类（CLASS）.
+例如，vmm_chardev（字符设备）、vmm_blockdev（块设备）、vmm_netport（网络端口）、vmm_netswitch（网络交换机）等.
 
 vmm_device
-逻辑上代表一个设备（DEVICE），该设备要么位于一个总线上，要么是某个类的一部分，但不能同时是两者。
-一个设备可以是其他设备的子设备，也可以拥有自己的子设备。如果设备 X 位于总线上并实现了类 A 和类 B 的功能，那么我们将有伪设备 XA 和 XB，它们分别属于类 A 和类 B，父设备为 X。
+逻辑上代表一个设备（DEVICE），该设备要么位于一个总线上，要么是某个类的一部分，但不能同时是两者.
+一个设备可以是其他设备的子设备，也可以拥有自己的子设备.如果设备 X 位于总线上并实现了类 A 和类 B 的功能，那么我们将有伪设备 XA 和 XB，它们分别属于类 A 和类 B，父设备为 X.
 
 vmm_driver
-逻辑上代表驻留在总线上的设备的设备驱动程序（DEVICE DRIVER）。我们只能向总线注册设备驱动程序，而不能向类注册。
+逻辑上代表驻留在总线上的设备的设备驱动程序（DEVICE DRIVER）.我们只能向总线注册设备驱动程序，而不能向类注册.
 
-上述定义的实体在运行时由各种 Xvisor 模块注册。Xvisor 中的默认总线是平台总线，这是一个伪总线，用于通过 Xvisor 设备树探测所有设备。vmm_chardev 是 Xvisor 中始终可用的默认类，因为标准 IO 子系统（稍后描述）和命令管理器（稍后描述）严重依赖于字符设备。
+上述定义的实体在运行时由各种 Xvisor 模块注册.Xvisor 中的默认总线是平台总线，这是一个伪总线，用于通过 Xvisor 设备树探测所有设备.vmm_chardev 是 Xvisor 中始终可用的默认类，因为标准 IO 子系统（稍后描述）和命令管理器（稍后描述）严重依赖于字符设备.
 
 ## 第9章: 设备仿真框架
 
-设备仿真框架是任何 hypervisor 中最关键的组件之一。它帮助 hypervisor 为客户提供特定的虚拟硬件。
-Xvisor 的设备仿真框架旨在灵活、轻量和快速。Xvisor 设备仿真框架最重要的实体是: vmm_emulator 和 vmm_emudev。
-vmm_emulator 是设备仿真模块注册的设备仿真器的逻辑表示，而 vmm_emudev 是任何被仿真/直通的设备的逻辑表示。
+设备仿真框架是任何 hypervisor 中最关键的组件之一.它帮助 hypervisor 为客户提供特定的虚拟硬件.
+Xvisor 的设备仿真框架旨在灵活、轻量和快速.Xvisor 设备仿真框架最重要的实体是: vmm_emulator 和 vmm_emudev.
+vmm_emulator 是设备仿真模块注册的设备仿真器的逻辑表示，而 vmm_emudev 是任何被仿真/直通的设备的逻辑表示.
 
-在创建客户时，hypervisor 管理器将在设备仿真框架的帮助下为每个虚拟和直通客户区域创建一个 vmm_emudev 实例。
-框架将尝试为每个新创建的 vmm_emudev 实例探测匹配的 vmm_emulator，如果框架未能找到匹配的 vmm_emulator 或 vmm_emulator 的探测函数返回错误，则客户创建失败。
+在创建客户时，hypervisor 管理器将在设备仿真框架的帮助下为每个虚拟和直通客户区域创建一个 vmm_emudev 实例.
+框架将尝试为每个新创建的 vmm_emudev 实例探测匹配的 vmm_emulator，如果框架未能找到匹配的 vmm_emulator 或 vmm_emulator 的探测函数返回错误，则客户创建失败.
 
-除上述外，Xvisor 设备仿真框架还为中断控制器仿真器和 GPIO 控制器仿真器提供特殊支持，通过提供固定数量的客户 irq 线。
-可以通过客户设备树在客户创建时指定客户 irq 线的总数。
-中断控制器和 GPIO 控制器仿真器将提供回调函数来监视某些客户 irq 线的电平变化。
-中断控制器仿真器将基于客户 irq 线的电平变化触发客户 VCPU 中断，而 GPIO 控制器仿真器将基于客户 irq 线的电平变化执行某些操作。
+除上述外，Xvisor 设备仿真框架还为中断控制器仿真器和 GPIO 控制器仿真器提供特殊支持，通过提供固定数量的客户 irq 线.
+可以通过客户设备树在客户创建时指定客户 irq 线的总数.
+中断控制器和 GPIO 控制器仿真器将提供回调函数来监视某些客户 irq 线的电平变化.
+中断控制器仿真器将基于客户 irq 线的电平变化触发客户 VCPU 中断，而 GPIO 控制器仿真器将基于客户 irq 线的电平变化执行某些操作.
 
-所有的 vmm_emulator 读/写回调都在普通上下文中调用，因此设备仿真器不能在读/写回调中睡眠或使用可睡眠锁，如果绝对必要睡眠，则设备仿真器将不得不使用后台工作线程（或孤儿 VCPUs）。
-这种“在设备仿真上下文中无法睡眠”的策略帮助 Xvisor 确保设备仿真的可预测延迟，这对实时系统至关重要。
+所有的 vmm_emulator 读/写回调都在普通上下文中调用，因此设备仿真器不能在读/写回调中睡眠或使用可睡眠锁，如果绝对必要睡眠，则设备仿真器将不得不使用后台工作线程（或孤儿 VCPUs）.
+这种“在设备仿真上下文中无法睡眠”的策略帮助 Xvisor 确保设备仿真的可预测延迟，这对实时系统至关重要.
 
 ## 第10章: 标准 I/O
 
-任何通用操作系统或实时操作系统都需要一种打印和扫描 ASCII 文本的方式。Xvisor 也不例外，因此我们在 Xvisor 中有标准 IO 子系统，它实现了各种形式的打印和扫描 API。
+任何通用操作系统或实时操作系统都需要一种打印和扫描 ASCII 文本的方式.Xvisor 也不例外，因此我们在 Xvisor 中有标准 IO 子系统，它实现了各种形式的打印和扫描 API.
 
 标准 I/O 子系统需要以下内容来完成其任务: 
 
 1. "defterm" 函数来自架构特定代码
-   打印和扫描 ASCII 文本的默认方式是使用架构特定代码提供的 defterm 函数。
-   架构特定代码将为 defterm 提供 init、getc 和 putc 函数。
-   这些 "defterm" 函数对所有架构都是必需的，但架构特定代码可以选择提供存根实现。
+   打印和扫描 ASCII 文本的默认方式是使用架构特定代码提供的 defterm 函数.
+   架构特定代码将为 defterm 提供 init、getc 和 putc 函数.
+   这些 "defterm" 函数对所有架构都是必需的，但架构特定代码可以选择提供存根实现.
 
 2. "defterm early" 打印函数来自架构特定代码
-   标准 I/O 子系统作为启动过程的一部分被初始化。在标准 I/O 子系统初始化之前，有很多初始化工作需要完成，
+   标准 I/O 子系统作为启动过程的一部分被初始化.在标准 I/O 子系统初始化之前，有很多初始化工作需要完成，
    所以我们有来自架构特定代码的 defterm early 打印函数，如果 Xvisor 的某些部分在标准 I/O 子系统初始化之前尝试打印 ASCII 文本，
-   将会调用此函数。架构独立代码包括了一个 defterm early 打印函数的弱实现，所以为架构特定代码提供这个函数完全是可选的。
-   一般来说，"defterm early" 打印函数仅用于调试目的，并且在大多数架构上应默认禁用。
+   将会调用此函数.架构独立代码包括了一个 defterm early 打印函数的弱实现，所以为架构特定代码提供这个函数完全是可选的.
+   一般来说，"defterm early" 打印函数仅用于调试目的，并且在大多数架构上应默认禁用.
 
 3. 字符设备
-   标准 I/O 子系统可以从任何字符设备实例（即 vmm_chardev）打印/扫描字符。
-   只有当没有为标准 I/O 设置字符设备实例时，它才会使用 "defterm" 函数。
-   可以使用管理守护程序的各种标准 I/O 命令或通过调用标准 I/O 子系统的更改设备 API 来为标准 I/O 设置字符设备。
-   不是必须对所有标准 I/O 交互使用相同的字符设备设置。
+   标准 I/O 子系统可以从任何字符设备实例（即 vmm_chardev）打印/扫描字符.
+   只有当没有为标准 I/O 设置字符设备实例时，它才会使用 "defterm" 函数.
+   可以使用管理守护程序的各种标准 I/O 命令或通过调用标准 I/O 子系统的更改设备 API 来为标准 I/O 设置字符设备.
+   不是必须对所有标准 I/O 交互使用相同的字符设备设置.
    实际上，标准 I/O 子系统提供了 API，可以在特定的字符设备实例上打印或扫描字符，
-   这可能与已为标准 I/O 设置的字符设备实例不同。
+   这可能与已为标准 I/O 设置的字符设备实例不同.
 
-除上述内容外，标准 I/O 子系统还提供了许多调试宏和堆栈跟踪打印 API。要打印堆栈跟踪，标准 I/O 子系统将再次依赖于架构特定代码。
+除上述内容外，标准 I/O 子系统还提供了许多调试宏和堆栈跟踪打印 API.要打印堆栈跟踪，标准 I/O 子系统将再次依赖于架构特定代码.
 
 ## 第11章: 命令管理器
 
@@ -585,8 +585,8 @@ vmm_emulator 是设备仿真模块注册的设备仿真器的逻辑表示，而 
 
 Xvisor 命令管理器提供了一种与传输介质无关的管理和执行命令的方式，
 这样我们就可以在各种管理守护程序中共享 Xvisor 命令，
-无需进行任何更改。最重要的是，它提供了 API，
-允许通过指定的字符设备执行命令字符串，以及命令的输入输出。它还提供了注册、注销和管理命令的 API。
+无需进行任何更改.最重要的是，它提供了 API，
+允许通过指定的字符设备执行命令字符串，以及命令的输入输出.它还提供了注册、注销和管理命令的 API.
 
 通过命令管理器可以使用的几种类型的命令包括: 
 
@@ -600,77 +600,77 @@ Xvisor 命令管理器提供了一种与传输介质无关的管理和执行命�
 
 ## 第12章: 存储虚拟化
 
-Xvisor 中的存储虚拟化非常简单且轻量。它有两个关键实体: vmm_blockdev 和 vmm_vdisk。
+Xvisor 中的存储虚拟化非常简单且轻量.它有两个关键实体: vmm_blockdev 和 vmm_vdisk.
 
-Xvisor 的块设备框架将是 Xvisor 存储虚拟化中最关键的部分。
-vmm_blockdev 是在 Xvisor 设备驱动框架的块类下注册的块设备实例的逻辑表示。
-每个 vmm_blockdev 都与由 vmm_request_queue 实体表示的请求队列相关联。
-所有对 vmm_blockdev 的 IO 操作都是异步的，并以 vmm_request 实体的形式提交。
-vmm_blockdev 的分区将表示为具有与父 vmm_blockdev 相同的 vmm_request_queue 的子 vmm_blockdev 实例。
+Xvisor 的块设备框架将是 Xvisor 存储虚拟化中最关键的部分.
+vmm_blockdev 是在 Xvisor 设备驱动框架的块类下注册的块设备实例的逻辑表示.
+每个 vmm_blockdev 都与由 vmm_request_queue 实体表示的请求队列相关联.
+所有对 vmm_blockdev 的 IO 操作都是异步的，并以 vmm_request 实体的形式提交.
+vmm_blockdev 的分区将表示为具有与父 vmm_blockdev 相同的 vmm_request_queue 的子 vmm_blockdev 实例.
 
-实现存储虚拟化并不强制需要文件系统。实际上，Xvisor 中的文件系统库（称为“VFS”）完全是可选的，仅用于加载客户镜像、脚本和日志记录。
+实现存储虚拟化并不强制需要文件系统.实际上，Xvisor 中的文件系统库（称为“VFS”）完全是可选的，仅用于加载客户镜像、脚本和日志记录.
 
-Xvisor 中的磁盘控制器仿真器为每个客户实例的虚拟磁盘创建一个 vmm_vdisk 实例。
-vmm_vdisk 是在 vmm_blockdev 实例之上的逻辑包装器，在客户创建时或使用 Xvisor 命令在运行时必须附加到 vmm_blockdev 实例。
-如果附加到 vmm_vdisk 的 vmm_blockdev 在运行时被注销，则它将自动与 vmm_vdisk 分离。
-如果 vmm_vdisk 没有附加到任何 vmm_blockdev，则所有对 vmm_vdisk 的 IO 请求都将失败。
-此外，vmm_vdisk 的块大小必须是 vmm_blockdev 块大小的倍数。
+Xvisor 中的磁盘控制器仿真器为每个客户实例的虚拟磁盘创建一个 vmm_vdisk 实例.
+vmm_vdisk 是在 vmm_blockdev 实例之上的逻辑包装器，在客户创建时或使用 Xvisor 命令在运行时必须附加到 vmm_blockdev 实例.
+如果附加到 vmm_vdisk 的 vmm_blockdev 在运行时被注销，则它将自动与 vmm_vdisk 分离.
+如果 vmm_vdisk 没有附加到任何 vmm_blockdev，则所有对 vmm_vdisk 的 IO 请求都将失败.
+此外，vmm_vdisk 的块大小必须是 vmm_blockdev 块大小的倍数.
 
 第13章: 网络虚拟化
 
-Xvisor 中的网络虚拟化以轻量级数据包交换框架的形式提供。
-它主要提供了使用某些数据包交换策略共享宿主网络接口的抽象。
-因为我们不需要完整的网络堆栈就可以提供网络虚拟化，所以 Xvisor 的网络堆栈（或 netstack 或网络套接字库）完全是可选的。
-只有基于网络的管理守护程序需要网络套接字 API，并且在大多数用例中，我们可以禁用这些守护程序。
+Xvisor 中的网络虚拟化以轻量级数据包交换框架的形式提供.
+它主要提供了使用某些数据包交换策略共享宿主网络接口的抽象.
+因为我们不需要完整的网络堆栈就可以提供网络虚拟化，所以 Xvisor 的网络堆栈（或 netstack 或网络套接字库）完全是可选的.
+只有基于网络的管理守护程序需要网络套接字 API，并且在大多数用例中，我们可以禁用这些守护程序.
 
 总的来说，Xvisor 的网络支持包括四个关键组件: 
 
 1. 网络切换框架
    (Located under: <xvisor_source>/core/net)
 
-   Xvisor 网络的主要思想是拥有一个快速的数据包交换框架。网络核心实现了 vmm_mbuf、vmm_netswitch 和 vmm_netport。
+   Xvisor 网络的主要思想是拥有一个快速的数据包交换框架.网络核心实现了 vmm_mbuf、vmm_netswitch 和 vmm_netport.
 
-   vmm_mbuf 是数据包的 BSD 式表示。它是非常通用的数据包表示，实际上我们可以用 Xvisor vmm_mbuf 来表示 Linux sk_buff。
+   vmm_mbuf 是数据包的 BSD 式表示.它是非常通用的数据包表示，实际上我们可以用 Xvisor vmm_mbuf 来表示 Linux sk_buff.
 
-   vmm_netswitch 是一个仿真的网络交换机，可以连接多个 vmm_netport。
-   vmm_netswitch 可以有不同的策略，如: 集线器、桥接器、路由器、VLAN 交换机等。
-   目前，我们有 MAC 级桥接策略和集线器/中继策略可用。
-   可以在 Xvisor 启动时或使用管理终端的命令创建具有给定策略的 vmm_netswitch。
+   vmm_netswitch 是一个仿真的网络交换机，可以连接多个 vmm_netport.
+   vmm_netswitch 可以有不同的策略，如: 集线器、桥接器、路由器、VLAN 交换机等.
+   目前，我们有 MAC 级桥接策略和集线器/中继策略可用.
+   可以在 Xvisor 启动时或使用管理终端的命令创建具有给定策略的 vmm_netswitch.
 
-   vmm_netport 是 vmm_netswitch 和驱动器或仿真器或 netstack 之间的逻辑连接。
-   未连接到任何 vmm_netswitch 的 vmm_netport 将丢弃数据包。
+   vmm_netport 是 vmm_netswitch 和驱动器或仿真器或 netstack 之间的逻辑连接.
+   未连接到任何 vmm_netswitch 的 vmm_netport 将丢弃数据包.
 
 2. 网络设备驱动程序
    (Located under: <xvisor_source>/drivers/net)
 
-   宿主网络设备驱动程序将创建 vmm_netport 并将其连接到 vmm_netswitch。在这种情况下，
-   vmm_netport 的 MAC 地址将与宿主网络设备的实际 MAC 地址相同。
-   为网络设备驱动程序移植提供的 Linux 兼容 API 将提供: 使用 vmm_netport 的 “struct net_device” 和使用 vmm_mbuf 的 “struct sk_buff”。
+   宿主网络设备驱动程序将创建 vmm_netport 并将其连接到 vmm_netswitch.在这种情况下，
+   vmm_netport 的 MAC 地址将与宿主网络设备的实际 MAC 地址相同.
+   为网络设备驱动程序移植提供的 Linux 兼容 API 将提供: 使用 vmm_netport 的 “struct net_device” 和使用 vmm_mbuf 的 “struct sk_buff”.
 
-   我们从不为宿主网络设备的 vmm_netports 分配任何 IP 地址。
-   这些 vmm_netports 以混杂模式运行，接受任何目的 IP 地址的数据包。
-   vmm_netswitch 将根据其交换策略决定转发数据包到哪些 vmm_netports。
+   我们从不为宿主网络设备的 vmm_netports 分配任何 IP 地址.
+   这些 vmm_netports 以混杂模式运行，接受任何目的 IP 地址的数据包.
+   vmm_netswitch 将根据其交换策略决定转发数据包到哪些 vmm_netports.
 
 3. 网络设备仿真器
    (Located under: <xvisor_source>/emulators/net)
 
-   网络设备仿真器也会创建 vmm_netport 并将其连接到 vmm_netswitch。
-   所有在此 vmm_netport 上接收的数据包都将被客户操作系统接收，所有由客户操作系统传输的数据包都将通过此 vmm_netport 传输。
-   vmm_netport 的 MAC 地址在客户创建时指定或使用随机数生成。vmm_netport 的 IP 地址在客户操作系统中分配，Xvisor 对此不了解。
+   网络设备仿真器也会创建 vmm_netport 并将其连接到 vmm_netswitch.
+   所有在此 vmm_netport 上接收的数据包都将被客户操作系统接收，所有由客户操作系统传输的数据包都将通过此 vmm_netport 传输.
+   vmm_netport 的 MAC 地址在客户创建时指定或使用随机数生成.vmm_netport 的 IP 地址在客户操作系统中分配，Xvisor 对此不了解.
 
 4. 可选的网络堆栈（或 netstack 或网络套接字库）
    (Located under: <xvisor_source>/libs/netstack)
 
    如上所述，网络堆栈（或 netstack 或网络套接字库）完全是可选的，
    我们可以将任何与 GPLv2 兼容的网络堆栈集成到 Xvisor 中，
-   前提是它实现了在 libs/include/libs/netstack.h 中定义的 API。
+   前提是它实现了在 libs/include/libs/netstack.h 中定义的 API.
 
-   通常，网络堆栈将使用一个或多个伪 vmm_netports 实现，这些伪 vmm_netports 连接到一个 vmm_netswitch。
-   伪 vmm_netports 的 MAC 地址可以在 Xvisor 启动时指定或使用随机数生成。
-   目前，我们选择 lwIP 作为我们的可选网络堆栈，将来我们可能会采取其他措施，但 libs/netstack.h 的 API 将保持不变。
+   通常，网络堆栈将使用一个或多个伪 vmm_netports 实现，这些伪 vmm_netports 连接到一个 vmm_netswitch.
+   伪 vmm_netports 的 MAC 地址可以在 Xvisor 启动时指定或使用随机数生成.
+   目前，我们选择 lwIP 作为我们的可选网络堆栈，将来我们可能会采取其他措施，但 libs/netstack.h 的 API 将保持不变.
 
    当在 Xvisor 中启用网络堆栈时，它还将需要为其每个 vmm_netport 分配 IP 地址和其他网络设置，
-   因此我们有 “net” 命令。我们也可以从外部或客户操作系统 “ping” 分配给网络堆栈的 vmm_netports 的 IP 地址。
+   因此我们有 “net” 命令.我们也可以从外部或客户操作系统 “ping” 分配给网络堆栈的 vmm_netports 的 IP 地址.
 
 ## 第14章: 虚拟化 I/O 框架
 
@@ -684,31 +684,31 @@ Xvisor 中的网络虚拟化以轻量级数据包交换框架的形式提供。
 6. 传感器设备（例如 GPS、温度、陀螺仪等）
 7. ----- Many More -----
 
-我们无法针对上述所有设备都使用通用的虚拟化框架，因此在 Xvisor 中，我们有基于 I/O 设备类型的专门虚拟化框架。
-这些虚拟化 I/O 框架充当了客户端仿真设备和主机设备之间的桥梁，从而实现了在多个客户实例之间共享主机设备。
+我们无法针对上述所有设备都使用通用的虚拟化框架，因此在 Xvisor 中，我们有基于 I/O 设备类型的专门虚拟化框架.
+这些虚拟化 I/O 框架充当了客户端仿真设备和主机设备之间的桥梁，从而实现了在多个客户实例之间共享主机设备.
 
 目前，我们有以下虚拟化 I/O 框架: 
 
 vmm_vserial
 
-虚拟串口子系统由两个实体组成，即 vmm_vserial 和 vmm_vserial_receiver。
-vmm_vserial 是虚拟串口的逻辑表示。客户串口仿真器为每个客户串口创建一个 vmm_vserial 实例。
-发送到 vmm_vserial 实例的所有字符都由相应的客户接收，从客户接收到的所有字符都由 vmm_vserial 实例接收。
-串口捕获守护程序将 vmm_vserial_receiver 实例注册到 vmm_vserial 实例以从 vmm_vserial 实例接收字符。
-这些守护程序可以使用 send API 将字符发送到 vmm_serial 实例。
+虚拟串口子系统由两个实体组成，即 vmm_vserial 和 vmm_vserial_receiver.
+vmm_vserial 是虚拟串口的逻辑表示.客户串口仿真器为每个客户串口创建一个 vmm_vserial 实例.
+发送到 vmm_vserial 实例的所有字符都由相应的客户接收，从客户接收到的所有字符都由 vmm_vserial 实例接收.
+串口捕获守护程序将 vmm_vserial_receiver 实例注册到 vmm_vserial 实例以从 vmm_vserial 实例接收字符.
+这些守护程序可以使用 send API 将字符发送到 vmm_serial 实例.
 
 vmm_vinput
 
-虚拟输入子系统由两个实体组成，即 vmm_vkeyboard 和 vmm_vmouse。
-客户键盘仿真器将为每个客户键盘创建一个 vmm_vkeyboard 实例，而客户鼠标仿真器将为每个客户鼠标创建一个 vmm_vmouse 实例。
-显示守护程序可以将键盘按键事件和鼠标移动事件注入到 vmm_vkeyboard 实例和 vmm_vmouse 实例中。
-vmm_vkeyboard 实例和 vmm_vmouse 实例接收到的所有事件都被注入到客户作为虚拟按键事件和虚拟鼠标移动事件。
+虚拟输入子系统由两个实体组成，即 vmm_vkeyboard 和 vmm_vmouse.
+客户键盘仿真器将为每个客户键盘创建一个 vmm_vkeyboard 实例，而客户鼠标仿真器将为每个客户鼠标创建一个 vmm_vmouse 实例.
+显示守护程序可以将键盘按键事件和鼠标移动事件注入到 vmm_vkeyboard 实例和 vmm_vmouse 实例中.
+vmm_vkeyboard 实例和 vmm_vmouse 实例接收到的所有事件都被注入到客户作为虚拟按键事件和虚拟鼠标移动事件.
 
 vmm_vdisplay
 
-虚拟显示子系统有两个重要实体，即 vmm_vdisplay 和 vmm_surface。
-GUI 渲染守护程序（例如 VNC 守护程序或 VScreen 守护程序等）创建 vmm_surface 实例并将其添加/绑定到 vmm_vdisplay 实例。
-一个 vmm_vdisplay 实例可以由多个 GUI 渲染守护程序添加其 vmm_surface 实例。
-GUI 渲染守护程序还将定期更新/同步 vmm_surface 实例与 vmm_vdisplay 实例的相关 API。
-显示仿真器创建 vmm_vdisplay 实例以模拟虚拟显示。
-这些显示仿真器还将使用 vmm_vdisplay 的与 surface 相关的 API 向 vmm_surface 实例提供关于虚拟显示变化的提示。
+虚拟显示子系统有两个重要实体，即 vmm_vdisplay 和 vmm_surface.
+GUI 渲染守护程序（例如 VNC 守护程序或 VScreen 守护程序等）创建 vmm_surface 实例并将其添加/绑定到 vmm_vdisplay 实例.
+一个 vmm_vdisplay 实例可以由多个 GUI 渲染守护程序添加其 vmm_surface 实例.
+GUI 渲染守护程序还将定期更新/同步 vmm_surface 实例与 vmm_vdisplay 实例的相关 API.
+显示仿真器创建 vmm_vdisplay 实例以模拟虚拟显示.
+这些显示仿真器还将使用 vmm_vdisplay 的与 surface 相关的 API 向 vmm_surface 实例提供关于虚拟显示变化的提示.

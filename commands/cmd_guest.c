@@ -168,9 +168,9 @@ static int cmd_guest_kick(struct vmm_chardev *cdev, const char *name)
 		return VMM_ENOTAVAIL;
 	}
 
-	if ((ret = vmm_manager_guest_kick(guest))) {
+	if ((ret = vmm_manager_guest_kick(guest))) { //返回非0值进这个
 		vmm_cprintf(cdev, "%s: Failed to kick\n", name);
-	} else {
+	} else { //0值进这个
 		vmm_cprintf(cdev, "%s: Kicked\n", name);
 	}
 

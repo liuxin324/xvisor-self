@@ -31,7 +31,7 @@ struct vmm_timer_event;
 
 struct vmm_timer_event {
 	/* Publically accessible info */
-	u64 expiry_tstamp;
+	u64 expiry_tstamp; //事件的到期时间戳，通常表示该事件应当被触发的具体时间点
 	u64 duration_nsecs;
 	void (*handler) (struct vmm_timer_event *);
 	void *priv;

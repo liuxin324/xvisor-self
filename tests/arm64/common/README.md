@@ -13,4 +13,4 @@ to configure, compile and run.
 
 1. `basic` - 基本固件的通用代码
 
-详细步骤请参考具体平台目录下的README配置、编译和运行。
+详细步骤请参考具体平台目录下的README配置、编译和运行.

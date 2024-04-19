@@ -49,23 +49,23 @@ then all Xvisor header should be include before Linux compatible headers.
 
                                                    Linux 驱动程序移植建议
 
-关键点是将原始 Linux 驱动程序与移植后的驱动程序之间的差异保持在最小。这将帮助他人以后更新驱动程序或驱动程序框架。
+关键点是将原始 Linux 驱动程序与移植后的驱动程序之间的差异保持在最小.这将帮助他人以后更新驱动程序或驱动程序框架.
 
 不要使用 "//" 或 "/* */" 注释来禁用代码，而是更倾向于使用 "#if 0"
 如果 Linux 头文件不存在，不要注释掉头文件包含行，而是创建占位符 Linux 兼容头文件
 更改函数原型时，尽量使用 "#if 0" 保持原始函数原型
 仅在以下情况下在 drivers/include/drv 中添加头文件：
 a) 我们正在实现的设备驱动框架未从 Linux 移植（例如 MMC, USB 等）
-b) 有太多非驱动位置需要访问头文件（例如 FB, 输入, RTC 等）。
-一般来说，driver/include/drv 中的头文件应尽量减少对 Linux 头文件的依赖，因为 Linux 头文件将依赖于 "drivers/include/drv" 头文件，而不是反过来（例如 drv/fb.h, drv/input.h 等）。
+b) 有太多非驱动位置需要访问头文件（例如 FB, 输入, RTC 等）.
+一般来说，driver/include/drv 中的头文件应尽量减少对 Linux 头文件的依赖，因为 Linux 头文件将依赖于 "drivers/include/drv" 头文件，而不是反过来（例如 drv/fb.h, drv/input.h 等）.
 提供 Linux 兼容驱动框架的三种方法：
-a) 直接从 Linux 到 Xvisor 移植代码，并根据需要更新 Linux 兼容头文件。
-在这种情况下，任何设备驱动头文件都不会驻留在 "drivers/include/drv" 中（例如 CLK, GPIO, 背光等）。
-b) 从头开始或通过扩展 uboot/grub2 源代码来实现设备驱动框架。
-在这种情况下，设备驱动头文件将驻留在 "drivers/include/drv" 中，我们将提供 Linux 兼容头文件，以 "drivers/include/drv" 中的头文件提供的功能为准（例如 MMC, USB, 串行等）。
-c) 精简 Linux 设备驱动框架，并将其转换为仅适用于 Xvisor 的设备驱动框架。
-在这种情况下，设备驱动头文件将驻留在 "drivers/include/drv" 中，我们将提供 Linux 兼容头文件，以 "drivers/include/drv" 中的头文件提供的功能为准（例如 FB, 输入, RTC 等）。
-从上述方法中，方法 a) 是我们最偏好的方法。
-我们仅在相应的 Linux 驱动框架太庞大时选择方法 b)。如果 Linux 驱动框架不复杂，但我们可能最终在太多非驱动位置使用驱动框架，则选择方法 c)。
+a) 直接从 Linux 到 Xvisor 移植代码，并根据需要更新 Linux 兼容头文件.
+在这种情况下，任何设备驱动头文件都不会驻留在 "drivers/include/drv" 中（例如 CLK, GPIO, 背光等）.
+b) 从头开始或通过扩展 uboot/grub2 源代码来实现设备驱动框架.
+在这种情况下，设备驱动头文件将驻留在 "drivers/include/drv" 中，我们将提供 Linux 兼容头文件，以 "drivers/include/drv" 中的头文件提供的功能为准（例如 MMC, USB, 串行等）.
+c) 精简 Linux 设备驱动框架，并将其转换为仅适用于 Xvisor 的设备驱动框架.
+在这种情况下，设备驱动头文件将驻留在 "drivers/include/drv" 中，我们将提供 Linux 兼容头文件，以 "drivers/include/drv" 中的头文件提供的功能为准（例如 FB, 输入, RTC 等）.
+从上述方法中，方法 a) 是我们最偏好的方法.
+我们仅在相应的 Linux 驱动框架太庞大时选择方法 b).如果 Linux 驱动框架不复杂，但我们可能最终在太多非驱动位置使用驱动框架，则选择方法 c).
 
-如果我们的代码同时包含 Xvisor 头文件和 Linux 兼容头文件，则所有 Xvisor 头文件都应该在 Linux 兼容头文件之前包含。
+如果我们的代码同时包含 Xvisor 头文件和 Linux 兼容头文件，则所有 Xvisor 头文件都应该在 Linux 兼容头文件之前包含.

@@ -252,6 +252,8 @@ static void system_postinit_work(struct vmm_work *work)
 	struct vmm_devtree_node *node, *node1;
 
 	/* Print status of present host CPUs */
+	/*打印主机CPU状态*/
+	//遍历每个存在的CPU，并打印其在线状态.这有助于确认哪些CPU已成功启动并在线
 	for_each_present_cpu(c) {
 		if (vmm_cpu_online(c)) {
 			vmm_init_printf("CPU%d online\n", c);
@@ -262,21 +264,28 @@ static void system_postinit_work(struct vmm_work *work)
 	vmm_init_printf("brought-up %d CPUs\n", vmm_num_online_cpus());
 
 	/* Free init memory */
+	/*释放初始化内存*/
+	/*释放在系统初始化阶段使用但现在不再需要的内存.vmm_host_free_initmem函数返回被释放的内存量，并打印出来*/
 	freed = vmm_host_free_initmem();
 	vmm_init_printf("freeing init memory %dK\n", freed);
 
 	/* Find chosen node */
+	/*查找“chosen”设备树节点*/
+
 	node = vmm_devtree_getnode(VMM_DEVTREE_PATH_SEPARATOR_STRING
 				   VMM_DEVTREE_CHOSEN_NODE_NAME);
 
 	/* Process console device */
+	/*处理控制台设备*/
 	str = NULL;
 	if (console_param) {
 		/* Process console device passed via bootargs */
+		// 如果通过启动参数（bootargs）指定了控制台设备，使用console_param_process函数处理它
 		console_param_process(console_param);
 	} else if (node && vmm_devtree_read_string(node,
 			VMM_DEVTREE_CONSOLE_ATTR_NAME, &str) == VMM_OK) {
 		/* Process console device passed via console DT property */
+		/*如果设备树的chosen节点定义了控制台设备（通过console或stdout-path属性），同样使用console_param_process函数处理*/
 		console_param_process(str);
 	} else if (node && vmm_devtree_read_string(node,
 			VMM_DEVTREE_STDOUT_ATTR_NAME, &str) == VMM_OK) {
@@ -289,6 +298,9 @@ static void system_postinit_work(struct vmm_work *work)
 	}
 
 	/* Process rtc device */
+	/*处理实时时钟（RTC）设备*/
+	/*类似于控制台设备，如果通过启动参数指定了RTC设备，或者设备树的chosen节点中定义了RTC设备（通过rtcdev属性），使用相应的函数处理它.
+	如果没有指定RTC设备，使用rtcdev_use_first函数选择并使用第一个可用的RTC设备*/
 	str = NULL;
 	if (rtcdev_param) {
 		/* Process rtc device passed via bootargs */
@@ -301,7 +313,8 @@ static void system_postinit_work(struct vmm_work *work)
 		/* Process first rtc device */
 		rtcdev_use_first();
 	}
-
+	/*处理启动命令*/
+	/*如果通过启动参数指定了启动命令，或者设备树的chosen节点中定义了启动命令（通过bootcmd属性），使用bootcmd_param_process函数处理它们*/
 	str = NULL;
 	if (bootcmd_param) {
 		/* Process boot commands passed via bootargs */
@@ -315,11 +328,14 @@ static void system_postinit_work(struct vmm_work *work)
 	}
 
 	/* De-reference chosen node */
+	/*取消引用“chosen”节点*/
+	/*如果使用了设备树的chosen节点，执行取消引用操作，以释放与该节点相关的资源*/
 	if (node) {
 		vmm_devtree_dref_node(node);
 	}
 
 	/* Set system init done flag */
+	/*设置系统初始化完成标志*/
 	sys_init_done = TRUE;
 }
 
@@ -331,6 +347,7 @@ static void system_init_work(struct vmm_work *work)
 #endif
 
 	/* Initialize wallclock */
+	/*初始化墙钟（wallclock）子系统*/
 	vmm_init_printf("wallclock subsystem\n");
 	ret = vmm_wallclock_init();
 	if (ret) {
@@ -340,6 +357,7 @@ static void system_init_work(struct vmm_work *work)
 #if defined(CONFIG_SMP)
 	/* Start each present secondary CPUs */
 	vmm_init_printf("start secondary CPUs\n");
+	/*遍历每一个存在的辅助CPU，除了启动CPU的那一个，然后使用arch_smp_start_cpu函数启动它们*/
 	for_each_present_cpu(c) {
 		if (c == vmm_smp_bootcpu_id()) {
 			continue;
@@ -353,6 +371,7 @@ static void system_init_work(struct vmm_work *work)
 
 #ifdef CONFIG_LOADBAL
 	/* Initialize hypervisor load balancer */
+	/*初始化负载平衡*/
 	vmm_init_printf("hypervisor load balancer\n");
 	ret = vmm_loadbal_init();
 	if (ret) {
@@ -362,6 +381,7 @@ static void system_init_work(struct vmm_work *work)
 #endif
 
 	/* Initialize command manager */
+	/*初始化命令管理器*/
 	vmm_init_printf("command manager\n");
 	ret = vmm_cmdmgr_init();
 	if (ret) {
@@ -369,6 +389,7 @@ static void system_init_work(struct vmm_work *work)
 	}
 
 	/* Initialize device driver framework */
+	/*设置和初始化设备驱动框架，用于管理和控制虚拟及物理设备的驱动程序*/
 	vmm_init_printf("device driver framework\n");
 	ret = vmm_devdrv_init();
 	if (ret) {
@@ -376,6 +397,7 @@ static void system_init_work(struct vmm_work *work)
 	}
 
 	/* Initialize device emulation framework */
+	/*初始化设备模拟框架*/
 	vmm_init_printf("device emulation framework\n");
 	ret = vmm_devemu_init();
 	if (ret) {
@@ -383,6 +405,7 @@ static void system_init_work(struct vmm_work *work)
 	}
 
 	/* Initialize character device framework */
+	/*初始化字符设备框架*/
 	vmm_init_printf("character device framework\n");
 	ret = vmm_chardev_init();
 	if (ret) {
@@ -396,6 +419,11 @@ static void system_init_work(struct vmm_work *work)
 	 * so, we do this before vmm_modules_init() in-order to make sure that
 	 * correct number of online CPUs are visible to all modules.
 	 */
+	/* 轮询所有当前 CPU 是否在线 -在初始化其他模块之前完成，以确保所有CPU都可用
+	* 注意：有1秒超时
+	* 注意：模块可能使用 SMP IPI，或者可能具有每个 cpu 上下文
+	* 因此，我们在 vmm_modules_init() 之前执行此操作，以确保所有模块都可以看到正确数量的在线 CPU.
+	*/
 	ret = 1000;
 	while(ret--) {
 		int all_cpu_online = 1;
@@ -415,6 +443,7 @@ static void system_init_work(struct vmm_work *work)
 #endif
 
 	/* Initialize IOMMU framework */
+	/*输入输出内存管理单元（IOMMU）允许对DMA（直接内存访问）传输进行细粒度的控制.此步骤负责初始化IOMMU框架*/
 	vmm_init_printf("iommu framework\n");
 	ret = vmm_iommu_init();
 	if (ret) {
@@ -422,6 +451,7 @@ static void system_init_work(struct vmm_work *work)
 	}
 
 	/* Initialize hypervisor modules */
+	/*初始化虚拟机管理器模块*/
 	vmm_init_printf("hypervisor modules\n");
 	ret = vmm_modules_init();
 	if (ret) {
@@ -429,6 +459,7 @@ static void system_init_work(struct vmm_work *work)
 	}
 
 	/* Initialize cpu final */
+	/*CPU和主板的最终初始化*/
 	vmm_init_printf("CPU final\n");
 	ret = arch_cpu_final_init();
 	if (ret) {
@@ -443,6 +474,7 @@ static void system_init_work(struct vmm_work *work)
 	}
 
 	/* Call final init functions */
+	/*调用最终初始化函数*/
 	vmm_init_printf("final functions\n");
 	ret = vmm_initfn_final();
 	if (ret) {
@@ -450,6 +482,7 @@ static void system_init_work(struct vmm_work *work)
 	}
 
 	/* Schedule system post-init work */
+	/*调度系统后初始化工作*/
 	INIT_WORK(&sys_postinit, &system_postinit_work);
 	vmm_workqueue_schedule_work(NULL, &sys_postinit);
 
@@ -463,22 +496,25 @@ static void __init init_bootcpu(void)
 {
 	int ret;
 	struct vmm_devtree_node *node;
-
 	/* Sanity check on SMP processor id */
+	/* SMP处理器ID检查：确保当前处理器ID小于配置的CPU数量，如果不是，通过调用 vmm_hang 函数挂起系统 */
 	if (CONFIG_CPU_COUNT <= vmm_smp_processor_id()) {
 		vmm_hang();
 	}
 
 	/* Mark this CPU possible & present */
+	/*将当前CPU标记为可用（possible）和存在（present）*/
 	vmm_set_cpu_possible(vmm_smp_processor_id(), TRUE);
 	vmm_set_cpu_present(vmm_smp_processor_id(), TRUE);
 
 	/* Print version string */
+	/*打印Xvisor的版本信息*/
 	vmm_printf("\n");
 	vmm_printver();
 	vmm_printf("\n");
 
 	/* Initialize host address space */
+	/*主机地址空间：初始化用于管理虚拟和物理地址映射的主机地址空间*/
 	vmm_init_printf("host address space\n");
 	ret = vmm_host_aspace_init();
 	if (ret) {
@@ -486,6 +522,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize normal heap */
+	/*普通堆：初始化用于管理内存分配的普通堆*/
 	vmm_init_printf("heap management\n");
 	ret = vmm_heap_init();
 	if (ret) {
@@ -493,6 +530,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize device tree */
+	/*设备树：初始化用于管理设备树的设备树*/
 	vmm_init_printf("device tree\n");
 	ret = vmm_devtree_init();
 	if (ret) {
@@ -500,6 +538,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize device tree based reserved-memory */
+	/*基于设备树的预留内存：初始化设备树中定义的预留内存区域*/
 	vmm_init_printf("device tree reserved-memory\n");
 	ret = vmm_devtree_reserved_memory_init();
 	if (ret) {
@@ -507,6 +546,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize DMA heap */
+	/*DMA堆：初始化用于管理DMA内存的DMA堆*/
 	vmm_init_printf("DMA heap management\n");
 	ret = vmm_dma_heap_init();
 	if (ret) {
@@ -514,6 +554,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize CPU nascent */
+	/*CPU nascent：初始化CPU的早期阶段*/
 	vmm_init_printf("CPU nascent\n");
 	ret = arch_cpu_nascent_init();
 	if (ret) {
@@ -521,6 +562,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize Board nascent */
+	/*Board nascent：初始化板级的早期阶段*/
 	vmm_init_printf("board nascent\n");
 	ret = arch_board_nascent_init();
 	if (ret) {
@@ -528,6 +570,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Call nascent init functions */
+	/*调用初生（nascent）初始化函数*/
 	vmm_init_printf("nascent funtions\n");
 	ret = vmm_initfn_nascent();
 	if (ret) {
@@ -540,7 +583,8 @@ static void __init init_bootcpu(void)
 		goto init_bootcpu_fail;
 	}
 
-        /* Initialize exception table */
+    /* Initialize exception table */
+	/*初始化异常向量表*/
 	vmm_init_printf("exception table\n");
 	ret = vmm_extable_init();
 	if (ret) {
@@ -549,6 +593,7 @@ static void __init init_bootcpu(void)
 
 #if defined(CONFIG_SMP)
 	/* Initialize secondary CPUs */
+	/*初始化并配置系统中的其他CPU*/
 	vmm_init_printf("discover secondary CPUs\n");
 	ret = arch_smp_init_cpus();
 	if (ret) {
@@ -556,6 +601,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Prepare secondary CPUs */
+	/*准备系统中的其他CPU*/
 	ret = arch_smp_prepare_cpus(vmm_num_possible_cpus());
 	if (ret) {
 		goto init_bootcpu_fail;
@@ -563,6 +609,7 @@ static void __init init_bootcpu(void)
 #endif
 
 	/* Initialize per-cpu area */
+	/*每CPU区域：为每个处理器核心初始化专用存储区域*/
 	vmm_init_printf("per-CPU areas\n");
 	ret = vmm_percpu_init();
 	if (ret) {
@@ -577,12 +624,14 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Set CPU hotplug to online state */
+	/*CPU热插拔：初始化处理器的热添加和移除功能*/
 	ret = vmm_cpuhp_set_state(VMM_CPUHP_STATE_ONLINE);
 	if (ret) {
 		goto init_bootcpu_fail;
 	}
 
 	/* Make sure /guests and /vmm nodes are present */
+	/* 确保必要的设备树节点存在：检查并创建 /guests 和 /vmm 节点 */
 	node = vmm_devtree_getnode(VMM_DEVTREE_PATH_SEPARATOR_STRING
 				   VMM_DEVTREE_GUESTINFO_NODE_NAME);
 	if (!node) {
@@ -599,6 +648,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize host interrupts */
+	// 初始化 host 中断
 	vmm_init_printf("host irq subsystem\n");
 	ret = vmm_host_irq_init();
 	if (ret) {
@@ -606,6 +656,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize CPU early */
+	// 进一步初始化 CPU 
 	vmm_init_printf("CPU early\n");
 	ret = arch_cpu_early_init();
 	if (ret) {
@@ -613,6 +664,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize Board early */
+	// 进一步初始化板级
 	vmm_init_printf("board early\n");
 	ret = arch_board_early_init();
 	if (ret) {
@@ -627,6 +679,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize standerd input/output */
+	/*初始化标准输入输出*/
 	vmm_init_printf("standard I/O\n");
 	ret = vmm_stdio_init();
 	if (ret) {
@@ -634,6 +687,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize clocksource manager */
+	/*初始化时钟源管理器*/
 	vmm_init_printf("clocksource manager\n");
 	ret = vmm_clocksource_init();
 	if (ret) {
@@ -641,6 +695,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize clockchip manager */
+	/*初始化时钟芯片管理器*/
 	vmm_init_printf("clockchip manager\n");
 	ret = vmm_clockchip_init();
 	if (ret) {
@@ -648,6 +703,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize hypervisor timer */
+	/*初始化虚拟机监控器计时器*/
 	vmm_init_printf("hypervisor timer\n");
 	ret = vmm_timer_init();
 	if (ret) {
@@ -655,6 +711,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize hypervisor soft delay */
+	/*初始化虚拟机监控器软延迟*/
 	vmm_init_printf("hypervisor soft delay\n");
 	ret = vmm_delay_init();
 	if (ret) {
@@ -662,6 +719,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize hypervisor shared memory */
+	/*初始化虚拟机监控器共享内存*/
 	vmm_init_printf("hypervisor shared memory\n");
 	ret = vmm_shmem_init();
 	if (ret) {
@@ -669,6 +727,7 @@ static void __init init_bootcpu(void)
 	}
 
 	/* Initialize hypervisor manager */
+	/*初始化虚拟机监控器管理器*/
 	vmm_init_printf("hypervisor manager\n");
 	ret = vmm_manager_init();
 	if (ret) {
@@ -677,6 +736,7 @@ static void __init init_bootcpu(void)
 
 #if defined(CONFIG_SMP)
 	/* Initialize synchronus inter-processor interrupts */
+	/*初始化处理器间异步和同步中断的机制*/
 	vmm_init_printf("synchronus inter-processor interrupts\n");
 	ret = vmm_smp_sync_ipi_init();
 	if (ret) {
@@ -685,6 +745,7 @@ static void __init init_bootcpu(void)
 #endif
 
 	/* Initialize hypervisor scheduler */
+	/*初始化虚拟机监控器调度器*/
 	vmm_init_printf("hypervisor scheduler\n");
 	ret = vmm_scheduler_init();
 	if (ret) {
@@ -693,6 +754,7 @@ static void __init init_bootcpu(void)
 
 #if defined(CONFIG_SMP)
 	/* Initialize asynchronus inter-processor interrupts */
+	/*初始化处理器间异步和同步中断的机制*/
 	vmm_init_printf("asynchronus inter-processor interrupts\n");
 	ret = vmm_smp_async_ipi_init();
 	if (ret) {
@@ -701,6 +763,7 @@ static void __init init_bootcpu(void)
 #endif
 
 	/* Initialize hypervisor threads */
+	/*初始化用于虚拟机监控器内部操作的线程系统*/
 	vmm_init_printf("hypervisor threads\n");
 	ret = vmm_threads_init();
 	if (ret) {
@@ -709,6 +772,7 @@ static void __init init_bootcpu(void)
 
 #ifdef CONFIG_PROFILE
 	/* Initialize hypervisor profiler */
+	/*初始化虚拟机监控器性能分析器*/
 	vmm_init_printf("hypervisor profiler\n");
 	ret = vmm_profiler_init();
 	if (ret) {
@@ -717,6 +781,7 @@ static void __init init_bootcpu(void)
 #endif
 
 	/* Initialize workqueue framework */
+	/* 初始化工作队列框架 */
 	vmm_init_printf("workqueue framework\n");
 	ret = vmm_workqueue_init();
 	if (ret) {
@@ -728,6 +793,7 @@ static void __init init_bootcpu(void)
 	vmm_workqueue_schedule_work(NULL, &sys_init);
 
 	/* Start timer (Must be last step) */
+	/* 启动计时器（必须是最后一步）*/
 	vmm_timer_start();
 
 	/* Wait here till scheduler gets invoked by timer */
