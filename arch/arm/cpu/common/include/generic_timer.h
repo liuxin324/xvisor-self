@@ -24,8 +24,8 @@
 #ifndef __GENERIC_TIMER_H__
 #define __GENERIC_TIMER_H__
 
-#define GENERIC_TIMER_HCTL_KERN_PCNT_EN		(1 << 0)
-#define GENERIC_TIMER_HCTL_KERN_PTMR_EN		(1 << 1)
+#define GENERIC_TIMER_HCTL_KERN_PCNT_EN		(1 << 0) /* CNTHCTL_EL2-- EL1PCTEN, bit [0] -不捕获EL0 和 EL1 对 EL1 物理计数器寄存器(CNTPCT_EL0)的访问到 EL2 */
+#define GENERIC_TIMER_HCTL_KERN_PTMR_EN		(1 << 1) /* CNTHCTL_EL2--  EL1PCEN, bit [1] -不捕获EL0 和 EL1 对 EL1 物理计时器寄存器(CNTP_CTL_EL0、CNTP_CVAL_EL0、CNTP_TVAL_EL0)的访问捕获到 EL2*/
 
 #define GENERIC_TIMER_CTRL_ENABLE		(1 << 0)
 #define GENERIC_TIMER_CTRL_IT_MASK		(1 << 1)
@@ -47,25 +47,25 @@
 #include <vmm_timer.h>
 
 enum {
-	GENERIC_TIMER_REG_FREQ,
-	GENERIC_TIMER_REG_HCTL,
-	GENERIC_TIMER_REG_KCTL,
-	GENERIC_TIMER_REG_HYP_CTRL,
-	GENERIC_TIMER_REG_HYP_TVAL,
-	GENERIC_TIMER_REG_HYP_CVAL,
-	GENERIC_TIMER_REG_PHYS_CTRL,
-	GENERIC_TIMER_REG_PHYS_TVAL,
-	GENERIC_TIMER_REG_PHYS_CVAL,
-	GENERIC_TIMER_REG_VIRT_CTRL,
-	GENERIC_TIMER_REG_VIRT_TVAL,
-	GENERIC_TIMER_REG_VIRT_CVAL,
-	GENERIC_TIMER_REG_VIRT_OFF,
+	GENERIC_TIMER_REG_FREQ,			/* cntfrq_el0 * /
+	GENERIC_TIMER_REG_HCTL,			/* cnthctl_el2 */
+	GENERIC_TIMER_REG_KCTL,			/* cntkctl_el1 */
+	GENERIC_TIMER_REG_HYP_CTRL,		/* cnthp_ctl_el2*/
+	GENERIC_TIMER_REG_HYP_TVAL,		/* cnthp_tval_el2 */
+	GENERIC_TIMER_REG_HYP_CVAL,		/* cnthp_cval_el2 */
+	GENERIC_TIMER_REG_PHYS_CTRL,	/* cntp_ctl_el0 */
+	GENERIC_TIMER_REG_PHYS_TVAL,	/* cntp_tval_el0 */
+	GENERIC_TIMER_REG_PHYS_CVAL,	/* cntp_cval_el0 */
+	GENERIC_TIMER_REG_VIRT_CTRL,	/* cntv_ctl_el0 */
+	GENERIC_TIMER_REG_VIRT_TVAL,	/* cntv_tval_el0 */
+	GENERIC_TIMER_REG_VIRT_CVAL,	/* cntv_cval_el0 */
+	GENERIC_TIMER_REG_VIRT_OFF,		/* cntvoff_el2 */
 };
 
 struct generic_timer_context {
 	struct {
-		u32 phys_timer_irq;
-		u32 virt_timer_irq;
+		u32 phys_timer_irq; 		// 物理计时器中断号
+		u32 virt_timer_irq;			// 虚拟计时器中断号
 		u64 cntvoff;
 		u64 cntpcval;
 		u64 cntvcval;
@@ -73,8 +73,8 @@ struct generic_timer_context {
 		u32 cntpctl;
 		u32 cntvctl;
 	} __packed;
-	struct vmm_timer_event virt_ev;
-	struct vmm_timer_event phys_ev;
+	struct vmm_timer_event virt_ev; // 虚拟定时器事件结构体
+	struct vmm_timer_event phys_ev; // 物理计时器事件的结构体
 };
 
 int generic_timer_vcpu_context_init(void *vcpu_ptr,

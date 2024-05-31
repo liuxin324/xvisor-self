@@ -70,8 +70,7 @@ static void generic_timer_get_freq(struct vmm_devtree_node *node)
             /* Use preconfigured counter frequency
              * in absence of dts node
              */
-            generic_timer_hz = generic_timer_reg_read(
-                GENERIC_TIMER_REG_FREQ); // 如果rc不为0（表示读取失败），则尝试从计时器的硬件寄存器中直接读取频率
+            generic_timer_hz = generic_timer_reg_read(GENERIC_TIMER_REG_FREQ); // 如果rc不为0（表示读取失败），则尝试从cntfrq_el0直接读取频率
         } else { // 如果读取成功,将频率写入到计时器寄存器中
             if (generic_timer_freq_writeable()) {
                 /* Program the counter frequency
@@ -108,7 +107,7 @@ static int __init generic_timer_clocksource_init(struct vmm_devtree_node *node)
 
 	cs->name = "gen-timer"; // 时间源的名称
 	cs->rating = 400; // 该时间源的可靠性或精确度评级
-	cs->read = &generic_counter_read; // 获取当前的计时器值
+	cs->read = &generic_counter_read; // 获取当前的cntpct_el0值
 	cs->mask = VMM_CLOCKSOURCE_MASK(56);// 限定了时间源的有效范围
 	cs->freq = generic_timer_hz; // 时间源的频率
 	vmm_clocks_calc_mult_shift(&cs->mult, &cs->shift,
@@ -338,7 +337,7 @@ static vmm_irq_return_t generic_virt_timer_handler(int irq, void *dev)
 
 static u32 timer_irq[4], timer_num_irqs;
 /**
- * @description: 用于在虚拟机管理器（VMM）中启动并注册不同类型的通用计时器，包括Hypervisor计时器、物理计时器和虚拟计时器
+ * @description: 用于启动和初始化一个通用计时器 (generic timer)，包括为 Hypervisor 和物理/虚拟计时器设置中断处理程序
  * @param {vmm_cpuhp_notify} *cpuhp 用于CPU热插拔通知的结构
  * @param {u32} cpu CPU编号
  * @return {*}
@@ -350,16 +349,15 @@ static int generic_timer_startup(struct vmm_cpuhp_notify *cpuhp, u32 cpu)
 	struct vmm_clockchip *cc;
 
 	/* Ensure hypervisor timer is stopped */
-	generic_timer_stop(); // 确保在配置新计时器前Hypervisor计时器处于停止状态
+	generic_timer_stop(); 
 
 	/* Create generic hypervisor timer clockchip */
-	/*创建并初始化计时器对象*/
-	cc = vmm_zalloc(sizeof(struct vmm_clockchip));// 分配 vmm_clockchip 结构并进行初始化
+	cc = vmm_zalloc(sizeof(struct vmm_clockchip));
 	if (!cc) {
 		return VMM_EFAIL;
 	}
 	cc->name = "gen-hyp-timer"; // 计时器名称
-	cc->hirq = timer_irq[GENERIC_HYPERVISOR_TIMER];// 中断号
+	cc->hirq = timer_irq[GENERIC_HYPERVISOR_TIMER];
 	cc->rating = 400; // 评级
 	cc->cpumask = vmm_cpumask_of(vmm_smp_processor_id()); // CPU亲和性
 	cc->features = VMM_CLOCKCHIP_FEAT_ONESHOT; // 功能（例如单次触发）

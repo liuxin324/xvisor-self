@@ -35,9 +35,11 @@
  * We are running at EL2 and if EL3 is not implemented, 
  * hypervisor can write to cntfrq_el0 */
 
-/*检查cntfrq_el0（计时器频率寄存器）是否可写。这取决于CPU是否支持EL3（异常级别3）。
-如果CPU不支持EL3，并且代码运行在EL2（通常是Hypervisor层），Hypervisor可以写入这个寄存器。
-这通过宏cpu_supports_el3()判断，如果CPU不支持EL3，则返回true表示cntfrq_el0是可写的*/
+/* 检查cntfrq_el0（计时器频率寄存器）是否可写。
+ * 这取决于CPU是否支持EL3（异常级别3）。
+ * 如果CPU不支持EL3，并且代码运行在EL2（通常是Hypervisor层），
+ * Hypervisor可以写入这个寄存器。
+ * 这通过宏cpu_supports_el3()判断，如果CPU不支持EL3，则返回true表示cntfrq_el0是可写的*/
 #define generic_timer_freq_writeable()	(!cpu_supports_el3())
 
 static inline void generic_timer_reg_write(int reg, u32 val)

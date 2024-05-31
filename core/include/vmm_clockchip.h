@@ -67,24 +67,24 @@ struct vmm_clockchip;
  * @next_event:		local storage for the next event in oneshot mode
  */
 struct vmm_clockchip {
-	struct dlist head;
-	const char *name;
-	u32 hirq;
-	int rating;
-	const struct vmm_cpumask *cpumask;
-	unsigned int features;
-	u32 freq;
-	u32 mult;
-	u32 shift;
-	u64 max_delta_ns;
-	u64 min_delta_ns;
-	void (*event_handler) (struct vmm_clockchip *cc);
-	void (*set_mode) (enum vmm_clockchip_mode mode, struct vmm_clockchip *cc);
-	int (*set_next_event) (unsigned long evt, struct vmm_clockchip *cc);
-	enum vmm_clockchip_mode mode;
-	u32 bound_on;
-	u64 next_event;
-	void *priv;
+	struct dlist head;  														/* 一个双向链表头，用于将时钟芯片设备注册到系统中的列表 */
+	const char *name;															/* 指向时钟芯片名称的指针*/
+	u32 hirq;																	/* host irq number*/
+	int rating;																	/* 评估时钟事件设备的变量*/
+	const struct vmm_cpumask *cpumask;											/* 指向CPU掩码的指针，用于指示该设备适用于哪些CPU*/
+	unsigned int features;														/* 一个标志字段，用于表示时钟芯片设备支持的功能特性 */
+	u32 freq;																	/* 时钟事件设备的运行频率*/
+	u32 mult;																	/* 纳秒到周期数的乘数，用于将时间转换为周期数*/
+	u32 shift;																	/* 纳秒到周期数的除数（2的幂），用于将时间转换为周期数*/
+	u64 max_delta_ns;															/* 最大时间增量（以纳秒为单位），时钟事件设备能够表示的最大值*/
+	u64 min_delta_ns;															/* 最小时间增量（以纳秒为单位），时钟事件设备能够表示的最小值*/
+	void (*event_handler) (struct vmm_clockchip *cc);							/* 一个函数指针，由框架分配，用于由事件源的低级处理程序调用*/
+	void (*set_mode) (enum vmm_clockchip_mode mode, struct vmm_clockchip *cc);	/* 一个函数指针，用于设置时钟芯片设备的操作模式*/
+	int (*set_next_event) (unsigned long evt, struct vmm_clockchip *cc);		/* 一个函数指针，用于设置下一个事件的时间*/
+	enum vmm_clockchip_mode mode;												/* 由hyp分配的操作模式*/
+	u32 bound_on;																/* 表示该时钟芯片设备绑定到的主机CPU*/
+	u64 next_event;																/* 在单次触发模式下的下一个事件的本地存储*/
+	void *priv;																	/* 一个私有指针，用于时钟芯片设备的私有数据*/
 };
 
 #define VMM_NSEC_PER_SEC	1000000000UL

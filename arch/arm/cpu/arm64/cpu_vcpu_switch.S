@@ -270,38 +270,38 @@ cpu_vcpu_ptrauth_regs_restore:
 	ret
 
 	.globl generic_timer_regs_save
-generic_timer_regs_save:  // 保存当前通用计时器的状态到一个事先定义的数据结构中
-	str	x1, [sp, #-8]!                 				/* 将寄存器x1的内容压栈，同时减小栈指针sp以备后续使用 */
-	mrs	x1, cntp_ctl_el0	/* cntpctl */ 			/* 读取物理计时器控制寄存器cntp_ctl_el0到x1 */
-	str	w1, [x0, #GENERIC_TIMER_CONTEXT_cntpctl] 	/*将x1的值存储到由x0指向的上下文结构中的cntpctl位置 */
-	mrs	x1, cntv_ctl_el0	/* cntvctl */
-	str	w1, [x0, #GENERIC_TIMER_CONTEXT_cntvctl]
-	mrs	x1, cntkctl_el1		/* cntkctl */
-	str	w1, [x0, #GENERIC_TIMER_CONTEXT_cntkctl]
-	mrs	x1, cntp_cval_el0	/* cntpcval */
-	str	x1, [x0, #GENERIC_TIMER_CONTEXT_cntpcval]
-	mrs	x1, cntv_cval_el0	/* cntvcval */
-	str	x1, [x0, #GENERIC_TIMER_CONTEXT_cntvcval]
-	mov	x1, #GENERIC_TIMER_CTRL_IT_MASK   /*将用于禁用计时器的掩码加载到x1 */
-	msr	cntp_ctl_el0, x1	/* disable physical timer */
-	msr	cntv_ctl_el0, x1	/* disable virtual timer */
-	ldr	x1, [sp], #8   		/* 从栈中恢复x1的原始值，并更新栈指针 */
-	ret                   	/* 返回到调用者 */
+generic_timer_regs_save:							/* 保存当前通用计时器的状态到vcpu上下文保存 */
+	str	x1, [sp, #-8]!                 				/* 将寄存器 x1 的内容压入栈，同时将栈指针 sp 减小 8 字节，预留空间保存 x1 的值 */
+	mrs	x1, cntp_ctl_el0	/* cntpctl */ 			/* 将物理计时器控制寄存器 cntp_ctl_el0 的值读取到寄存器 x1 中 */
+	str	w1, [x0, #GENERIC_TIMER_CONTEXT_cntpctl] 	/* 将 x1 中的值（实际上是 w1 的低 32 位）存储到由 x0(vCPU) 指向的上下文结构体的 cntpctl 位置 */
+	mrs	x1, cntv_ctl_el0	/* cntvctl */			/* 将虚拟计时器控制寄存器 cntv_ctl_el0 的值读取到寄存器 x1 中 */
+	str	w1, [x0, #GENERIC_TIMER_CONTEXT_cntvctl]	/* 将 x1 中的值存储到上下文结构体的 cntvctl 位置 */
+	mrs	x1, cntkctl_el1		/* cntkctl */			/* 将内核计时器控制寄存器 cntkctl_el1 的值读取到寄存器 x1 中 */
+	str	w1, [x0, #GENERIC_TIMER_CONTEXT_cntkctl]	/* 将 x1 中的值存储到上下文结构体的 cntkctl 位置 */
+	mrs	x1, cntp_cval_el0	/* cntpcval */			/* 将物理计时器比较值寄存器 cntp_cval_el0 的值读取到寄存器 x1 中 */
+	str	x1, [x0, #GENERIC_TIMER_CONTEXT_cntpcval]	/* 将 x1 中的值存储到上下文结构体的 cntpcval 位置 */
+	mrs	x1, cntv_cval_el0	/* cntvcval */			/* 将虚拟计时器比较值寄存器 cntv_cval_el0 的值读取到寄存器 x1 中 */
+	str	x1, [x0, #GENERIC_TIMER_CONTEXT_cntvcval]	/* 将 x1 中的值存储到上下文结构体的 cntvcval 位置 */
+	mov	x1, #GENERIC_TIMER_CTRL_IT_MASK   			/*将用于禁用计时器的掩码加载到x1 */
+	msr	cntp_ctl_el0, x1							/* 设置中断屏蔽位-不会产生中断 */
+	msr	cntv_ctl_el0, x1							/* 设置中断屏蔽位-不会产生中断 */
+	ldr	x1, [sp], #8   								/* 从栈中恢复x1的原始值，并更新栈指针 */
+	ret                   							/* 返回到调用者 */
 
 	.globl generic_timer_regs_restore
-generic_timer_regs_restore: // 从一个保存的数据结构中恢复通用计时器的状态
-	str	x1, [sp, #-8]!  			// 先将x1的当前值保存到栈中
-	ldr	x1, [x0, GENERIC_TIMER_CONTEXT_cntvoff]
-	msr	cntvoff_el2, x1		/* cntvoff */     /*	加载并恢复虚拟计时器偏移量寄存器cntvoff_el2 */
-	ldr	x1, [x0, #GENERIC_TIMER_CONTEXT_cntpcval]
-	msr	cntp_cval_el0, x1	/* cntpcval */
-	ldr	x1, [x0, #GENERIC_TIMER_CONTEXT_cntvcval]
-	msr	cntv_cval_el0, x1	/* cntvcval */
-	ldr	w1, [x0, #GENERIC_TIMER_CONTEXT_cntkctl]
-	msr	cntkctl_el1, x1		/* cntkctl */
-	ldr	w1, [x0, #GENERIC_TIMER_CONTEXT_cntpctl]
-	msr	cntp_ctl_el0, x1	/* cntpctl */
-	ldr	w1, [x0, #GENERIC_TIMER_CONTEXT_cntvctl]
-	msr	cntv_ctl_el0, x1	/* cntvctl */
-	ldr	x1, [sp], #8  /*恢复x1寄存器的原始值 */
+generic_timer_regs_restore:							 /* 从vCPU中恢复恢复通用计时器的状态*/ 
+	str	x1, [sp, #-8]!								 /* 将寄存器 x1 的当前值保存到栈中，并将栈指针 sp 减小 8 字节，预留空间保存 x1 的值*/
+	ldr	x1, [x0, GENERIC_TIMER_CONTEXT_cntvoff]		 /* 从vCPU中加载虚拟计时器偏移量 cntvoff 的值到 x1 中 */
+	msr	cntvoff_el2, x1		/* cntvoff */     		 /* 将 x1 的值写入虚拟计时器偏移量寄存器 cntvoff_el2 */
+	ldr	x1, [x0, #GENERIC_TIMER_CONTEXT_cntpcval]	 /* 加载物理计时器比较值 cntpcval 到 x1 中 */
+	msr	cntp_cval_el0, x1	/* cntpcval */			 /* 将 x1 的值写入物理计时器比较值寄存器 cntp_cval_el0 */
+	ldr	x1, [x0, #GENERIC_TIMER_CONTEXT_cntvcval]	 /* 加载虚拟计时器比较值 cntvcval 到 x1 中 */
+	msr	cntv_cval_el0, x1	/* cntvcval */			 /* 将 x1 的值写入虚拟计时器比较值寄存器 cntv_cval_el0 */
+	ldr	w1, [x0, #GENERIC_TIMER_CONTEXT_cntkctl]	 /* 加载内核计时器控制寄存器 cntkctl 到 w1 中 */
+	msr	cntkctl_el1, x1		/* cntkctl */			 /* 将 w1 的值写入内核计时器控制寄存器 cntkctl_el1 */
+	ldr	w1, [x0, #GENERIC_TIMER_CONTEXT_cntpctl]	 /* 加载物理计时器控制寄存器 cntpctl 到 w1 中 */
+	msr	cntp_ctl_el0, x1	/* cntpctl */			 /* 将 w1 的值写入物理计时器控制寄存器 cntp_ctl_el0 */
+	ldr	w1, [x0, #GENERIC_TIMER_CONTEXT_cntvctl]	 /* 加载虚拟计时器控制寄存器 cntvctl 到 w1 中 */
+	msr	cntv_ctl_el0, x1	/* cntvctl */			 /* 将 w1 的值写入虚拟计时器控制寄存器 cntv_ctl_el0 */
+	ldr	x1, [sp], #8  								 /*恢复x1寄存器的原始值 */
 	ret
